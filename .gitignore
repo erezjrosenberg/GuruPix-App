@@ -1,0 +1,82 @@
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Environment / secrets ---
+.env
+.env.local
+.env.*.local
+*.pem
+
+# --- Python (backend + ml) ---
+backend/.venv/
+backend/venv/
+ml/.venv/
+ml/venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- Python testing / coverage ---
+backend/.pytest_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# --- Python linting / type checking ---
+backend/.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# --- Node (frontend + e2e) ---
+node_modules/
+frontend/node_modules/
+tests/e2e/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- Build outputs ---
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+*.tsbuildinfo
+
+# --- Playwright (e2e) ---
+tests/e2e/playwright-report/
+tests/e2e/test-results/
+
+# --- IDE / editor (optional: remove .cursor if you want to commit Cursor rules) ---
+# .cursor/
+
+# --- Logs / temp ---
+*.log
+*.tmp
+*.temp
+.cache/
+
+# --- Local / personal ---
+Personal Notes/

@@ -1,0 +1,97 @@
+---
+description: Frontend UI conventions for GuruPix
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# Frontend — frontend_rules.md
+
+## Purpose
+Guidelines for building a readable, maintainable, accessible, and high-performance frontend for GuruPix.
+
+---
+
+## Goals
+- Reusable components.
+- Predictable state management.
+- Accessibility-first approach.
+- Strong typing with TypeScript.
+- Performance and clean UX.
+
+---
+
+## Project Structure (Example)
+
+/frontend
+  /src
+    /components
+    /features
+    /pages
+    /hooks
+    /services
+    /styles
+    /utils
+    /assets
+    /tests
+  package.json
+  tsconfig.json
+
+---
+
+## Coding Standards
+- TypeScript with strict mode.
+- Functional components + hooks.
+- One component per file.
+- ESLint + Prettier enforced in CI.
+
+---
+
+## State & Data
+- React Query (or SWR) for server state.
+- Local state kept close to usage.
+- Typed API clients (OpenAPI or similar).
+
+---
+
+## Styling
+- Tailwind CSS or CSS Modules.
+- Use design tokens.
+- Avoid global CSS pollution.
+
+---
+
+## Testing
+- Unit tests: Jest + React Testing Library.
+- E2E: Playwright or Cypress.
+- Optional visual regression with Storybook.
+
+---
+
+## Performance
+- Code splitting and lazy loading.
+- Optimize images (webp/avif).
+- Lighthouse checks in CI.
+
+---
+
+## Accessibility
+- Semantic HTML.
+- Keyboard navigation support.
+- WCAG 2.1 AA contrast compliance.
+
+---
+
+## Developer Experience
+- npm run dev
+- npm run test
+- .env.example provided
+- Mock API option for local development
+
+---
+
+## Code Review Checklist
+- Component tested?
+- Accessible?
+- Handles loading/error states?
+- No unnecessary re-renders?
+

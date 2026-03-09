@@ -1,0 +1,106 @@
+---
+description: Backend code conventions for GuruPix
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Backend — backend_rules.md
+
+## Purpose
+Clear, opinionated rules and patterns for the backend of the GuruPix project.
+These guidelines aim to make the codebase readable, maintainable, testable, secure, and easy to upgrade.
+
+---
+
+## Goals
+- Consistency: one obvious way to do things.
+- Simplicity: small, focused modules; explicit boundaries.
+- Observability: logs, metrics, traces.
+- Safety: secure defaults and least privilege.
+- Testability: unit, integration, and contract tests.
+
+---
+
+## Project Structure (Example)
+
+/backend
+  /src
+    /controllers
+    /services
+    /repositories
+    /models
+    /routes
+    /middlewares
+    /schemas
+    /jobs
+    /utils
+    /config
+  /tests
+  Dockerfile
+  docker-compose.yml
+  README.md
+
+---
+
+## Coding Standards
+- Use TypeScript (strict) or Python 3.10+ with type hints.
+- Controllers should be thin (delegate to services).
+- Explicit request/response schemas.
+- Linting + formatting enforced in CI.
+- Small, single-responsibility modules.
+
+---
+
+## API Design
+- Versioned endpoints: /api/v1/...
+- RESTful resource naming.
+- Stable response contracts.
+- Consistent error format:
+
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Readable message"
+  }
+}
+
+---
+
+## Security
+- Validate all inputs.
+- Use parameterized queries / ORM.
+- Store secrets in environment variables.
+- Enable HTTPS in production.
+- Rate limit sensitive endpoints.
+
+---
+
+## Testing
+- Unit tests for services.
+- Integration tests for routes.
+- CI runs tests on every PR.
+- Use migrations for DB schema changes.
+
+---
+
+## Observability
+- Structured logs (JSON).
+- Health endpoints: /health and /ready.
+- Basic metrics (latency, error rate).
+
+---
+
+## Upgrade Strategy
+- Backward-compatible changes first.
+- Feature flags for large updates.
+- Semantic versioning.
+
+---
+
+## Code Review Checklist
+- Small and focused?
+- Errors handled?
+- Tests included?
+- Logging added?
+- No secrets committed?
+

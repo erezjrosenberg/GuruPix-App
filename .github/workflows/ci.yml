@@ -1,0 +1,163 @@
+# GuruPix CI — merge gating (Stage 0)
+# Jobs: lint, unit, integration, e2e, model smoke, security
+# Branch protection: require all jobs to pass before merge.
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  POSTGRES_PORT: 5433
+  REDIS_PORT: 6380
+  QDRANT_PORT: 6335
+
+jobs:
+  lint-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install backend deps
+        run: |
+          cd backend
+          pip install -e ".[dev]"
+      - name: Ruff
+        run: cd backend && ruff check .
+      - name: Black
+        run: cd backend && black --check .
+      - name: Mypy
+        run: cd backend && mypy app
+
+  lint-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend deps
+        run: cd frontend && npm ci || npm install
+      - name: ESLint
+        run: cd frontend && npm run lint
+      - name: Prettier
+        run: cd frontend && npm run format:check
+
+  unit-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install and run unit tests
+        run: |
+          cd backend
+          pip install -e ".[dev]"
+          pytest tests/unit -v
+
+  unit-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install and run tests
+        run: |
+          cd frontend && (npm ci || npm install) && npm test
+
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_PORT: 5433
+      REDIS_PORT: 6380
+      QDRANT_PORT: 6335
+      # Backend must connect to the same port compose exposes (5433)
+      DATABASE_URL: postgresql+asyncpg://gurupix:gurupix_local@localhost:5433/gurupix
+      DATABASE_URL_SYNC: postgresql://gurupix:gurupix_local@localhost:5433/gurupix
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Start infrastructure
+        run: |
+          cd infra
+          docker compose up -d
+          sleep 10
+          docker compose ps
+      - name: Install backend and run integration tests
+        run: |
+          cd backend
+          pip install -e ".[dev]"
+          pytest tests/integration -v
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: tests/e2e/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Start infrastructure
+        run: |
+          cd infra && docker compose up -d && sleep 10
+      - name: Start backend
+        run: |
+          cd backend && pip install -e ".[dev]" && uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+      - name: Install Playwright and run E2E
+        run: |
+          cd tests/e2e && (npm ci || npm install)
+          npx playwright install --with-deps chromium
+          E2E_BASE_URL=http://localhost:8000 npx playwright test
+        env:
+          E2E_BASE_URL: http://localhost:8000
+
+  model-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install ML deps and run smoke
+        run: |
+          cd ml && pip install -r requirements.txt && python train.py --smoke
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Frontend audit
+        run: |
+          cd frontend && (npm ci || npm install) && npm audit --audit-level=high || true
+      - name: Backend (pip audit if available)
+        run: |
+          cd backend && pip install -e ".[dev]" pip-audit 2>/dev/null; pip-audit -r <(pip freeze) || true

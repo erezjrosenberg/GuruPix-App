@@ -1,0 +1,53 @@
+# GuruPix pre-commit hooks (Stage 0)
+# Install: pre-commit install
+# Run all: pre-commit run --all-files
+# Backend: ruff, black, mypy, pytest unit. Frontend: eslint, prettier, vitest.
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.8
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+
+  - repo: https://github.com/psf/black
+    rev: 24.2.0
+    hooks:
+      - id: black
+        files: ^backend/
+        language_version: python3
+
+  - repo: local
+    hooks:
+      - id: mypy-backend
+        name: mypy (backend)
+        entry: bash -c 'cd backend && mypy app'
+        language: system
+        files: ^backend/app/.*\.py$
+
+      - id: pytest-unit-backend
+        name: pytest unit (backend)
+        entry: bash -c 'cd backend && pytest tests/unit -q'
+        language: system
+        pass_filenames: false
+
+  - repo: local
+    hooks:
+      - id: eslint-frontend
+        name: eslint (frontend)
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        files: ^frontend/src/.*\.(ts|tsx)$
+
+      - id: prettier-frontend
+        name: prettier (frontend)
+        entry: bash -c 'cd frontend && npx prettier --check "src/**/*.{ts,tsx,css,json}"'
+        language: system
+        files: ^frontend/src/.*\.(ts|tsx|css|json)$
+
+      - id: vitest-frontend
+        name: vitest (frontend)
+        entry: bash -c 'cd frontend && npm test'
+        language: system
+        pass_filenames: false

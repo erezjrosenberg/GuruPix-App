@@ -1,0 +1,41 @@
+Database Migrations — GuruPix (Alembic)
+
+GuruPix uses Alembic for all Postgres schema migrations. The database URL
+is read from app.core.config.Settings (which loads from .env / env vars).
+
+Current schema (001_initial_schema):
+  - users, oauth_accounts    (Auth)
+  - profiles                 (User preferences)
+  - items                    (Catalog: movies/series/episodes)
+  - item_availability        (Where to watch)
+  - item_reviews_agg         (Review signals)
+  - events                   (Learning loop / feedback)
+  - models                   (Model registry)
+  - contexts, context_events (Contextual "vibes" prompting)
+
+Prerequisites:
+  - Postgres running (start with: make docker_up  OR  docker_restart)
+  - Backend venv activated
+
+Commands (run from backend/):
+  alembic upgrade head                            # Apply all migrations
+  alembic downgrade base                          # Drop all tables
+  alembic revision -m "description" --autogenerate  # Generate migration from model changes
+  alembic downgrade -1                            # Roll back one revision
+  alembic history                                 # Show revision history
+  alembic current                                 # Show current revision
+
+Testing:
+  make test                     # Runs all tests (starts Docker, runs migrations automatically)
+  make test-backend-integration # Runs integration tests only (includes migration + smoke tests)
+
+  The integration test suite (tests/integration/test_db_migrations.py) verifies:
+    1. alembic upgrade head applies cleanly from an empty database
+    2. upgrade head is idempotent (running it twice doesn't fail)
+    3. Insert/select/delete smoke test for every table
+
+Files:
+  alembic.ini                  — Alembic config (points to this directory)
+  migrations/env.py            — Loads Settings, sets sync DB URL, imports all models
+  migrations/script.py.mako    — Template for new migration files
+  migrations/versions/         — Migration scripts (001_initial_schema.py, ...)

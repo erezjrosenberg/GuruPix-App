@@ -1,0 +1,63 @@
+# GuruPix local infrastructure (Stage 0+)
+# Usage: from repo root: cd infra && docker compose up -d
+# See docs/DEVELOPER_GUIDE.md for full setup.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gurupix
+      POSTGRES_PASSWORD: gurupix_local
+      POSTGRES_DB: gurupix
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gurupix -d gurupix"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:6333/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Optional: uncomment and run with: docker compose --profile minio up -d
+  # minio:
+  #   image: minio/minio:latest
+  #   command: server /data
+  #   ports:
+  #     - "9000:9000"
+  #   volumes:
+  #     - minio_data:/data
+  #   profiles:
+  #     - minio
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+  # minio_data:

@@ -1,0 +1,14 @@
+{
+  "name": "gurupix-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "description": "GuruPix E2E tests (Playwright)",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.0.0"
+  }
+}

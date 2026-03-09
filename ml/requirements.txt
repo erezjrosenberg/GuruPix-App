@@ -1,0 +1,5 @@
+# GuruPix ML — Stage 0 minimal deps; expand in Stage 10
+# Run: pip install -r requirements.txt
+
+# Core (smoke test only for Stage 0)
+numpy>=1.24,<3
