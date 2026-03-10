@@ -16,7 +16,6 @@ from httpx import AsyncClient
 
 from tests.integration.conftest import unique_email
 
-
 # -- Signup -------------------------------------------------------------------
 
 

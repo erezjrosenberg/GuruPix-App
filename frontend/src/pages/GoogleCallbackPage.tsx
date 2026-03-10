@@ -27,7 +27,7 @@ export default function GoogleCallbackPage() {
 
     api
       .get<TokenResponse>(
-        `/api/v1/auth/google/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
+        `/api/v1/auth/google/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`
       )
       .then((data) => {
         setToken(data.access_token);

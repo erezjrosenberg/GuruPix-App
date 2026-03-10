@@ -28,10 +28,7 @@ export interface ApiError {
   request_id?: string;
 }
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "X-Request-Id": uuid4(),

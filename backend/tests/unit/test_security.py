@@ -82,7 +82,9 @@ def test_jwt_tampered_token_raises() -> None:
         algorithm=TEST_ALG,
     )
     with pytest.raises(jwt.InvalidTokenError):
-        decode_access_token(token, secret_key="secret-key-B-that-is-at-least-32-bytes", algorithm=TEST_ALG)
+        decode_access_token(
+            token, secret_key="secret-key-B-that-is-at-least-32-bytes", algorithm=TEST_ALG
+        )
 
 
 def test_jwt_garbage_token_raises() -> None:

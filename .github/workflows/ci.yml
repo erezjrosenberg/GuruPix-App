@@ -113,7 +113,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: tests/e2e/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -125,13 +125,17 @@ jobs:
         run: |
           cd backend && pip install -e ".[dev]" && uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           sleep 5
+      - name: Build and serve frontend
+        run: |
+          cd frontend && npm ci && npm run build && npx -y serve -s dist -l 5173 &
+          sleep 3
       - name: Install Playwright and run E2E
         run: |
           cd tests/e2e && (npm ci || npm install)
           npx playwright install --with-deps chromium
-          E2E_BASE_URL=http://localhost:8000 npx playwright test
+          npx playwright test
         env:
-          E2E_BASE_URL: http://localhost:8000
+          E2E_BASE_URL: http://localhost:5173
 
   model-smoke:
     runs-on: ubuntu-latest

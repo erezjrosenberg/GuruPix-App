@@ -61,10 +61,7 @@ export default function LoginPage() {
           }}
         />
 
-        <label
-          htmlFor="password"
-          style={{ display: "block", marginBottom: 4 }}
-        >
+        <label htmlFor="password" style={{ display: "block", marginBottom: 4 }}>
           Password
         </label>
         <input

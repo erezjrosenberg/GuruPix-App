@@ -64,6 +64,8 @@ frontend/build/
 frontend/.next/
 frontend/out/
 *.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # --- Playwright (e2e) ---
 tests/e2e/playwright-report/

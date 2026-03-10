@@ -17,7 +17,7 @@ function renderLogin() {
   return render(
     <MemoryRouter initialEntries={["/login"]}>
       <LoginPage />
-    </MemoryRouter>,
+    </MemoryRouter>
   );
 }
 
@@ -37,15 +37,13 @@ describe("LoginPage", () => {
   it("renders 'Continue with Google' button", () => {
     renderLogin();
     expect(
-      screen.getByRole("button", { name: /continue with google/i }),
+      screen.getByRole("button", { name: /continue with google/i })
     ).toBeInTheDocument();
   });
 
   it("renders log in button by default", () => {
     renderLogin();
-    expect(
-      screen.getByRole("button", { name: /log in/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
   });
 
   it("toggles to signup mode", async () => {
@@ -53,7 +51,7 @@ describe("LoginPage", () => {
     const toggle = screen.getByRole("button", { name: /sign up/i });
     await userEvent.click(toggle);
     expect(
-      screen.getByRole("button", { name: /create account/i }),
+      screen.getByRole("button", { name: /create account/i })
     ).toBeInTheDocument();
   });
 

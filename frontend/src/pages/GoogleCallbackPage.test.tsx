@@ -26,7 +26,7 @@ function renderCallback(search = "?code=auth-code&state=valid-state") {
   return render(
     <MemoryRouter initialEntries={[`/auth/google/callback${search}`]}>
       <GoogleCallbackPage />
-    </MemoryRouter>,
+    </MemoryRouter>
   );
 }
 
@@ -49,14 +49,14 @@ describe("GoogleCallbackPage", () => {
   it("shows error when code is missing", () => {
     renderCallback("?state=valid-state");
     expect(screen.getByRole("alert")).toHaveTextContent(
-      /missing authorization code or state/i,
+      /missing authorization code or state/i
     );
   });
 
   it("shows error when state is missing", () => {
     renderCallback("?code=auth-code");
     expect(screen.getByRole("alert")).toHaveTextContent(
-      /missing authorization code or state/i,
+      /missing authorization code or state/i
     );
   });
 
@@ -73,7 +73,7 @@ describe("GoogleCallbackPage", () => {
 
     await waitFor(() => {
       expect(mockGet).toHaveBeenCalledWith(
-        expect.stringContaining("/api/v1/auth/google/callback"),
+        expect.stringContaining("/api/v1/auth/google/callback")
       );
     });
 
@@ -113,7 +113,7 @@ describe("GoogleCallbackPage", () => {
     expect(screen.getByText(/back to login/i)).toBeInTheDocument();
     expect(screen.getByText(/back to login/i).closest("a")).toHaveAttribute(
       "href",
-      "/login",
+      "/login"
     );
   });
 });

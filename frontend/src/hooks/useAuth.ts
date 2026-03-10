@@ -69,7 +69,7 @@ export function useAuth() {
         setState((s) => ({ ...s, loading: false, error: msg }));
       }
     },
-    [fetchUser, navigate],
+    [fetchUser, navigate]
   );
 
   const login = useCallback(
@@ -91,14 +91,14 @@ export function useAuth() {
         setState((s) => ({ ...s, loading: false, error: msg }));
       }
     },
-    [fetchUser, navigate],
+    [fetchUser, navigate]
   );
 
   const startGoogleLogin = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const data = await api.get<GoogleStartResponse>(
-        "/api/v1/auth/google/start",
+        "/api/v1/auth/google/start"
       );
       window.location.href = data.authorization_url;
     } catch (err: unknown) {
