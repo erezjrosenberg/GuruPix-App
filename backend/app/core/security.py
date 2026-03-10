@@ -8,7 +8,7 @@ rest of the codebase never handles raw passwords or token bytes directly.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 import jwt
@@ -49,7 +49,7 @@ def create_access_token(
         Override settings (useful in tests).
     """
     to_encode = data.copy()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expire = now + (expires_delta or timedelta(minutes=_settings.jwt_expire_minutes))
     to_encode["exp"] = expire
     to_encode["iat"] = now

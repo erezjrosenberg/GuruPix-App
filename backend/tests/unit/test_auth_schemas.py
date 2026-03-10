@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
-from pydantic import ValidationError
-
 from app.schemas.auth import (
     GoogleStartResponse,
     LoginRequest,
@@ -15,7 +13,7 @@ from app.schemas.auth import (
     TokenResponse,
     UserResponse,
 )
-
+from pydantic import ValidationError
 
 # -- SignupRequest ------------------------------------------------------------
 
@@ -74,7 +72,7 @@ def test_token_response_shape() -> None:
 
 
 def test_user_response_shape() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     uid = uuid.uuid4()
     resp = UserResponse(id=uid, email="a@b.com", created_at=now)
     assert resp.id == uid

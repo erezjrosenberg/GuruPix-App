@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.db.models import User
 from app.services.auth import (
     authenticate_user,
@@ -27,7 +26,7 @@ def _make_user(
     user.id = uuid.uuid4()
     user.email = email
     user.password_hash = password_hash
-    user.created_at = datetime.now(timezone.utc)
+    user.created_at = datetime.now(UTC)
     return user
 
 

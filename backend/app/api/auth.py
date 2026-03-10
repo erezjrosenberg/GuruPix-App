@@ -7,7 +7,6 @@ All endpoints live under ``/api/v1/auth/``.
 from __future__ import annotations
 
 import secrets
-import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.exc import IntegrityError
@@ -44,7 +43,7 @@ async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)) -> Tok
         user = await create_user(db, body.email, body.password)
     except IntegrityError:
         await db.rollback()
-        raise HTTPException(status_code=409, detail="Email already registered")
+        raise HTTPException(status_code=409, detail="Email already registered") from None
 
     token = create_access_token({"sub": str(user.id)})
     return TokenResponse(access_token=token)

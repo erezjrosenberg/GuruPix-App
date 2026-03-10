@@ -36,7 +36,7 @@ async def get_current_user(
     try:
         payload = decode_access_token(token)
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code=401, detail="Invalid or expired token") from None
 
     sub = payload.get("sub")
     if sub is None:
@@ -45,7 +45,7 @@ async def get_current_user(
     try:
         user_id = uuid.UUID(sub)
     except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid token subject")
+        raise HTTPException(status_code=401, detail="Invalid token subject") from None
 
     user = await get_user_by_id(db, user_id)
     if user is None:

@@ -12,9 +12,8 @@ import uuid
 from typing import Any
 
 import pytest
-from httpx import ASGITransport, AsyncClient
-
 from app.hooks import event_bus
+from httpx import ASGITransport, AsyncClient
 
 
 def _pg_available() -> bool:

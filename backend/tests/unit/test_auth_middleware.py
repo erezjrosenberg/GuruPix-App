@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from fastapi import FastAPI, Request
-from fastapi.testclient import TestClient
-
 from app.core.security import create_access_token
 from app.middleware.auth import AuthMiddleware
+from fastapi import FastAPI, Request
+from fastapi.testclient import TestClient
 
 TEST_SECRET = "test-middleware-secret-key-long-enough"
 TEST_ALG = "HS256"

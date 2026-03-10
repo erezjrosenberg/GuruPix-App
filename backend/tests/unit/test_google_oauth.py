@@ -6,11 +6,8 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from httpx import ASGITransport, AsyncClient
-
 from app.clients.google_oauth import build_authorization_url, extract_user_info_from_id_token
-from app.core.security import create_access_token
-
+from httpx import ASGITransport, AsyncClient
 
 # -- google_oauth client helpers ----------------------------------------------
 
