@@ -11,7 +11,7 @@ Operational runbooks for deployment, incidents, and maintenance. To be expanded 
 ## Backend
 
 - Run: `cd backend && uvicorn app.main:app --reload`
-- Health: `curl http://localhost:8000/health` (after Stage 1)
+- Health: `curl http://localhost:8000/api/v1/health` (after Stage 1)
 
 ## Frontend
 

@@ -58,9 +58,9 @@ def create_app() -> FastAPI:
         lifespan=_lifespan,
     )
 
-    # Middleware stack — outermost runs first (last added = outermost):
-    #   ErrorMiddleware  →  LoggingMiddleware  →  RateLimitMiddleware
-    #   →  SessionMiddleware  →  TimingMiddleware  →  RequestIdMiddleware
+    # Middleware stack — last added = outermost (runs first on incoming request):
+    #   RequestIdMiddleware → TimingMiddleware → SessionMiddleware
+    #   → RateLimitMiddleware → LoggingMiddleware → ErrorMiddleware → App
     app.add_middleware(ErrorMiddleware)
     app.add_middleware(LoggingMiddleware)
     app.add_middleware(RateLimitMiddleware)
