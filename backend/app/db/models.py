@@ -71,6 +71,7 @@ class User(Base):
         default=uuid.uuid4,
     )
     email: Mapped[str] = mapped_column(Text, unique=True, nullable=False, index=True)
+    password_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
     oauth_accounts: Mapped[list[OAuthAccount]] = relationship(

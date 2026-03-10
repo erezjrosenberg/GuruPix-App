@@ -110,3 +110,30 @@ Release notes and notable changes per stage/PR.
 - Rate limiting triggers 429 after N requests.
 - Every response includes `X-Session-Id`.
 - Cache set/get/delete/invalidate works end-to-end.
+
+---
+
+## Stage 4 — Authentication (Email/Password + Google OAuth)
+
+**What changed**
+
+- **Email/Password auth**: `POST /api/v1/auth/signup` (create account, returns JWT), `POST /api/v1/auth/login` (authenticate, returns JWT), `GET /api/v1/auth/me` (protected, returns current user). Request: `{email, password}` (password min 8 chars). Response: `{access_token, token_type}`. Status codes: 201/200 on success, 409 if email exists, 422 on validation error, 401 on bad credentials or missing/invalid token.
+- **Google OAuth**: `GET /api/v1/auth/google/start` (returns `{authorization_url}`), `GET /api/v1/auth/google/callback` (exchanges code for tokens, creates/links user, returns JWT). State token stored in Redis; 400 on missing/invalid code/state.
+- **Auth choice**: JWT bearer tokens (not session cookies). Protected endpoints require `Authorization: Bearer <token>`.
+- **AuthMiddleware**: Extracts `user_id` from JWT for logging (non-blocking).
+- **Hook**: `on_user_logged_in` — fires on every successful login (email or Google).
+- **Dependencies**: bcrypt, PyJWT, httpx, asyncpg, greenlet, email-validator.
+- **Config env vars**: `SECRET_KEY`, `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OAUTH_CALLBACK_BASE_URL`.
+- **DB migration 002**: Added `password_hash` (TEXT, nullable) on `users` table.
+
+**Tests run**
+
+- Backend unit: 76 tests — pass.
+- Backend integration: 34 tests — pass.
+- Total: 110 tests (all passing).
+
+**Done when**
+
+- Signup, login, and `/auth/me` work with JWT.
+- Google OAuth flow completes and returns JWT.
+- AuthMiddleware logs user_id when token present.

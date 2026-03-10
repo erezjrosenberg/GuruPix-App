@@ -41,6 +41,16 @@ class Settings(BaseSettings):
     # Session TTL in seconds (how long an idle session lives in Redis).
     session_ttl_seconds: int = 86400
 
+    # --- JWT auth (Stage 4) ---
+    secret_key: str = "change-me-in-production-use-long-random-string"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60
+
+    # --- Google OAuth (Stage 4) ---
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    oauth_callback_base_url: str = "http://localhost:8000"
+
     def get_sync_database_url(self) -> str:
         """
         Return the database URL that Alembic and sync code use.

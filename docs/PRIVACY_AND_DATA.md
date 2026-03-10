@@ -9,6 +9,12 @@ Data contract, user rights, and retention. No new data collection without updati
 - **Account identity**: email, auth provider, created_at  
 - **Technical metadata**: request_id, session_id, error logs (PII redacted)
 
+### Auth-related data (Stage 4)
+
+- **Password hashes**: Stored in `users.password_hash` (bcrypt). Passwords are hashed, not reversible; plaintext passwords are never stored.
+- **OAuth metadata**: When users sign in via Google, provider-specific identifiers and metadata are stored in `oauth_accounts` for account linking. OAuth tokens used during the flow are exchanged for JWTs and are not persisted long-term.
+- **JWT tokens**: Stateless; not stored server-side. The server signs tokens with `SECRET_KEY` and validates them on each request. Tokens contain user_id and expiry; clients must store them securely (e.g. memory or httpOnly cookie).
+
 ### Required for continuous improvement
 
 - **Behavioral events**: clicks, likes, dislikes, watch_complete, skip (timestamps + item_id)

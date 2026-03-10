@@ -1,5 +1,5 @@
 """FastAPI API routers for the GuruPix backend."""
 
-from . import system
+from . import auth, system
 
-__all__ = ["system"]
+__all__ = ["auth", "system"]

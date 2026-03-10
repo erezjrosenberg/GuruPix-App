@@ -8,8 +8,10 @@ This package contains GuruPix's FastAPI middleware implementations, including:
 - ErrorMiddleware
 - RateLimitMiddleware  (Stage 3)
 - SessionMiddleware    (Stage 3)
+- AuthMiddleware       (Stage 4)
 """
 
+from .auth import AuthMiddleware
 from .error import ErrorMiddleware
 from .logging import LoggingMiddleware
 from .rate_limit import RateLimitMiddleware
@@ -24,4 +26,5 @@ __all__ = [
     "ErrorMiddleware",
     "RateLimitMiddleware",
     "SessionMiddleware",
+    "AuthMiddleware",
 ]

@@ -12,10 +12,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.api.auth import router as auth_router
 from app.api.system import router as system_router
 from app.clients.redis import close_redis, init_redis
 from app.core.version import get_app_version
 from app.middleware import (
+    AuthMiddleware,
     ErrorMiddleware,
     LoggingMiddleware,
     RateLimitMiddleware,
@@ -59,12 +61,13 @@ def create_app() -> FastAPI:
     )
 
     # Middleware stack — last added = outermost (runs first on incoming request):
-    #   RequestIdMiddleware → TimingMiddleware → SessionMiddleware
+    #   RequestIdMiddleware → TimingMiddleware → AuthMiddleware → SessionMiddleware
     #   → RateLimitMiddleware → LoggingMiddleware → ErrorMiddleware → App
     app.add_middleware(ErrorMiddleware)
     app.add_middleware(LoggingMiddleware)
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(SessionMiddleware)
+    app.add_middleware(AuthMiddleware)
     app.add_middleware(TimingMiddleware)
     app.add_middleware(RequestIdMiddleware)
 
@@ -91,6 +94,9 @@ def create_app() -> FastAPI:
 
     # System endpoints: health + version under /api/v1
     app.include_router(system_router)
+
+    # Auth endpoints: signup, login, me under /api/v1/auth
+    app.include_router(auth_router)
 
     @app.get("/")
     def root() -> dict[str, str]:

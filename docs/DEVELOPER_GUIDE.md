@@ -61,6 +61,15 @@ cp frontend/.env.example frontend/.env.local
 
 Edit `backend/.env` and `frontend/.env.local` if you need to override defaults (e.g. ports, URLs).
 
+**Auth-related env vars (Stage 4+)** — add to `backend/.env` for authentication:
+
+- `SECRET_KEY` — secret for JWT signing (required for auth)
+- `JWT_ALGORITHM` — e.g. `HS256` (default)
+- `JWT_EXPIRE_MINUTES` — token expiry (e.g. `60`)
+- `GOOGLE_CLIENT_ID` — for Google OAuth
+- `GOOGLE_CLIENT_SECRET` — for Google OAuth
+- `OAUTH_CALLBACK_BASE_URL` — base URL for OAuth callback (e.g. `http://localhost:8000`)
+
 ### 3. Start infrastructure (Postgres, Redis, Qdrant)
 
 ```bash
@@ -189,3 +198,10 @@ For more detail, see `ROADMAP_GuruPix_System_Design.md` and `docs/ARCHITECTURE.m
 - Verify Redis is reachable: `redis-cli ping` should return `PONG`.
 - Your `backend/.env` should include `REDIS_URL=redis://localhost:6379/0` (see `backend/.env.example`).
 - Stage 3 added two new middleware (`RateLimitMiddleware`, `SessionMiddleware`) and a `CacheService` — all backed by Redis. Stage 4 will build on these for auth sessions.
+
+### Before starting Stage 5
+
+- Ensure Stage 4 auth is working: signup, login, and `GET /auth/me` with Bearer token.
+- Run all backend tests to confirm a clean baseline:
+  `cd backend && .venv/bin/python -m pytest tests/unit tests/integration -v`
+- Your `backend/.env` should include auth vars (`SECRET_KEY`, `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES`) and, for Google OAuth, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OAUTH_CALLBACK_BASE_URL`.
