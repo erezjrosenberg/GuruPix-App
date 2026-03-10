@@ -93,7 +93,7 @@ class CacheService:
             return
         pattern = f"{_PREFIX}:{namespace}:*"
         try:
-            cursor: int | str = 0
+            cursor: int = 0
             while True:
                 cursor, keys = await redis.scan(cursor=cursor, match=pattern, count=200)
                 if keys:

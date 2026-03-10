@@ -33,8 +33,8 @@ _HEADER = "X-Session-Id"
 class SessionMiddleware(BaseHTTPMiddleware):
     """Attach and propagate a session identifier on every request."""
 
-    def __init__(self, app: Callable, **kwargs: object) -> None:
-        super().__init__(app, **kwargs)
+    def __init__(self, app: Callable) -> None:
+        super().__init__(app)
         settings = Settings()
         self.session_ttl: int = settings.session_ttl_seconds
 

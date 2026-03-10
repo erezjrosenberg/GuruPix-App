@@ -41,8 +41,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     - ``X-RateLimit-Reset``     – epoch second when the window resets
     """
 
-    def __init__(self, app: Callable, **kwargs: object) -> None:
-        super().__init__(app, **kwargs)
+    def __init__(self, app: Callable) -> None:
+        super().__init__(app)
         settings = Settings()
         self.max_requests: int = settings.rate_limit_per_minute
         self.window: int = _WINDOW_SECONDS
@@ -72,9 +72,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     detail="Rate limit exceeded. Try again later.",
                     request_id=getattr(request.state, "request_id", ""),
                 )
-                response = JSONResponse(status_code=429, content=body.model_dump())
-                self._set_rate_headers(response, remaining, reset_at)
-                return response
+                err_response = JSONResponse(status_code=429, content=body.model_dump())
+                self._set_rate_headers(err_response, remaining, reset_at)
+                return err_response
 
             response = await call_next(request)
             self._set_rate_headers(response, remaining, reset_at)
