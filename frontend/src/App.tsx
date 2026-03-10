@@ -1,9 +1,18 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "@/pages/LoginPage";
+import GoogleCallbackPage from "@/pages/GoogleCallbackPage";
+import HomePage from "@/pages/HomePage";
+
 function App() {
   return (
-    <div>
-      <h1>GuruPix</h1>
-      <p>Hyper-personalized movie &amp; TV recommendations.</p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

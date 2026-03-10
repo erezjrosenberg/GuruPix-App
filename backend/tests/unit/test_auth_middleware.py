@@ -9,7 +9,7 @@ from app.middleware.auth import AuthMiddleware
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
-TEST_SECRET = "test-middleware-secret-key-long-enough"
+TEST_SECRET = "test-middleware-secret-key-must-be-at-least-32-bytes-long"
 TEST_ALG = "HS256"
 
 

@@ -46,6 +46,7 @@ async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)) -> Tok
         raise HTTPException(status_code=409, detail="Email already registered") from None
 
     token = create_access_token({"sub": str(user.id)})
+    await event_bus.emit("on_user_logged_in", user_id=str(user.id), method="signup")
     return TokenResponse(access_token=token)
 
 
@@ -73,11 +74,14 @@ async def me(current_user: User = Depends(get_current_user)) -> UserResponse:
 @router.get("/google/start", response_model=GoogleStartResponse)
 async def google_start() -> GoogleStartResponse:
     """Generate a state token and return the Google OAuth consent URL."""
-    state = secrets.token_urlsafe(32)
-
     redis = get_redis_client()
-    if redis is not None:
-        await redis.setex(f"oauth_state:{state}", OAUTH_STATE_TTL, "1")
+    if redis is None:
+        raise HTTPException(
+            status_code=503, detail="OAuth unavailable — state store is not reachable"
+        )
+
+    state = secrets.token_urlsafe(32)
+    await redis.setex(f"oauth_state:{state}", OAUTH_STATE_TTL, "1")
 
     url = google_oauth.build_authorization_url(state)
     return GoogleStartResponse(authorization_url=url)
@@ -96,11 +100,14 @@ async def google_callback(
         raise HTTPException(status_code=400, detail="Missing state parameter")
 
     redis = get_redis_client()
-    if redis is not None:
-        stored = await redis.get(f"oauth_state:{state}")
-        if stored is None:
-            raise HTTPException(status_code=400, detail="Invalid or expired state")
-        await redis.delete(f"oauth_state:{state}")
+    if redis is None:
+        raise HTTPException(
+            status_code=503, detail="OAuth unavailable — state store is not reachable"
+        )
+    stored = await redis.get(f"oauth_state:{state}")
+    if stored is None:
+        raise HTTPException(status_code=400, detail="Invalid or expired state")
+    await redis.delete(f"oauth_state:{state}")
 
     token_data = await google_oauth.exchange_code_for_tokens(code)
 

@@ -128,12 +128,34 @@ Release notes and notable changes per stage/PR.
 
 **Tests run**
 
-- Backend unit: 76 tests — pass.
-- Backend integration: 34 tests — pass.
-- Total: 110 tests (all passing).
+- Backend unit: 78 tests — pass.
+- Backend integration: 36 tests — pass.
+- Frontend unit: 16 tests (3 test files) — pass.
+- E2E (Playwright): 11 tests (10 auth + 1 placeholder) — pass.
+- Total: 141 tests (all passing).
 
 **Done when**
 
 - Signup, login, and `/auth/me` work with JWT.
 - Google OAuth flow completes and returns JWT.
 - AuthMiddleware logs user_id when token present.
+
+### Stage 4 — Post-implementation audit fixes
+
+**What changed**
+
+- **Bug fix (backend):** Replaced unsafe `assert user is not None` in `services/auth.py` with a proper `RuntimeError` that is not stripped by Python `-O`.
+- **Bug fix (frontend):** Fixed API client global 401 handler intercepting login/signup 401 responses and redirecting before the error could be displayed. Auth endpoints now propagate the error to the caller instead of triggering a redirect.
+- **Bug fix (test):** Corrected return type annotation `-> AsyncClient` to `-> httpx.Response` in `test_oauth_integration.py:_do_google_callback`.
+- **Config fix:** Removed duplicate `SECRET_KEY` definition in `backend/.env.example`.
+- **Refactor:** Extracted shared integration test fixtures (`_pg_available`, `require_pg`, `client`, `unique_email`) into `backend/tests/integration/conftest.py` and updated both auth integration test files.
+- **New test:** Added `frontend/src/pages/GoogleCallbackPage.test.tsx` (7 tests) covering initial render, missing params, successful callback, API failure, generic error, and back-to-login link.
+- **New test:** Added `tests/e2e/auth.spec.ts` (10 tests) covering login page rendering, email/password signup/login flows, and full mocked Google OAuth flow (consent redirect, callback success, callback failure, missing params).
+
+**Tests run**
+
+- Backend unit: 78 tests — pass.
+- Backend integration: 36 tests — pass.
+- Frontend unit: 16 tests (3 test files) — pass.
+- E2E (Playwright): 11 tests (10 auth + 1 placeholder) — pass.
+- Total: 141 tests (all passing).

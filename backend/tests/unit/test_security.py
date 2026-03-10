@@ -13,7 +13,7 @@ from app.core.security import (
     verify_password,
 )
 
-TEST_SECRET = "unit-test-secret-key"
+TEST_SECRET = "unit-test-secret-key-must-be-at-least-32-bytes-long"
 TEST_ALG = "HS256"
 
 
@@ -78,11 +78,11 @@ def test_jwt_tampered_token_raises() -> None:
     """A token signed with a different secret cannot be decoded."""
     token = create_access_token(
         {"sub": "user-789"},
-        secret_key="secret-A",
+        secret_key="secret-key-A-that-is-at-least-32-bytes",
         algorithm=TEST_ALG,
     )
     with pytest.raises(jwt.InvalidTokenError):
-        decode_access_token(token, secret_key="secret-B", algorithm=TEST_ALG)
+        decode_access_token(token, secret_key="secret-key-B-that-is-at-least-32-bytes", algorithm=TEST_ALG)
 
 
 def test_jwt_garbage_token_raises() -> None:

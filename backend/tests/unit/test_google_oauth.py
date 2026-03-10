@@ -24,7 +24,7 @@ def test_extract_user_info_from_id_token() -> None:
     import jwt as pyjwt
 
     payload = {"sub": "google-123", "email": "user@gmail.com", "email_verified": True}
-    token = pyjwt.encode(payload, "not-verified", algorithm="HS256")
+    token = pyjwt.encode(payload, "not-verified-but-at-least-32-bytes-long", algorithm="HS256")
     info = extract_user_info_from_id_token(token)
     assert info["sub"] == "google-123"
     assert info["email"] == "user@gmail.com"
@@ -60,7 +60,11 @@ def _mock_google_tokens(email: str = "user@gmail.com", sub: str = "g-sub-1") -> 
     """Build a fake Google token response."""
     import jwt as pyjwt
 
-    id_token = pyjwt.encode({"sub": sub, "email": email}, "test", algorithm="HS256")
+    id_token = pyjwt.encode(
+        {"sub": sub, "email": email},
+        "test-key-for-google-at-least-32-bytes-long",
+        algorithm="HS256",
+    )
     return {"id_token": id_token, "access_token": "fake-access"}
 
 
@@ -86,6 +90,36 @@ async def test_google_callback_missing_state_returns_400() -> None:
         resp = await client.get("/api/v1/auth/google/callback?code=abc")
     assert resp.status_code == 400
     assert "state" in resp.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_google_start_returns_503_when_redis_unavailable() -> None:
+    from app.main import create_app
+
+    app = create_app()
+    transport = ASGITransport(app=app)
+
+    with patch("app.api.auth.get_redis_client", return_value=None):
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get("/api/v1/auth/google/start")
+
+    assert resp.status_code == 503
+    assert "unavailable" in resp.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_google_callback_returns_503_when_redis_unavailable() -> None:
+    from app.main import create_app
+
+    app = create_app()
+    transport = ASGITransport(app=app)
+
+    with patch("app.api.auth.get_redis_client", return_value=None):
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get("/api/v1/auth/google/callback?code=abc&state=xyz")
+
+    assert resp.status_code == 503
+    assert "unavailable" in resp.json()["detail"].lower()
 
 
 @pytest.mark.asyncio

@@ -71,7 +71,10 @@ async def find_or_create_oauth_user(
     existing_link = result.scalar_one_or_none()
     if existing_link is not None:
         user = await get_user_by_id(db, existing_link.user_id)
-        assert user is not None
+        if user is None:
+            raise RuntimeError(
+                f"OAuth link references non-existent user_id={existing_link.user_id}"
+            )
         return user
 
     user = await get_user_by_email(db, email)

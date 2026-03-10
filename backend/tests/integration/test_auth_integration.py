@@ -8,49 +8,13 @@ and the on_user_logged_in hook — all against the real database.
 
 from __future__ import annotations
 
-import uuid
 from typing import Any
 
 import pytest
 from app.hooks import event_bus
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
-
-def _pg_available() -> bool:
-    try:
-        import psycopg2
-
-        conn = psycopg2.connect("postgresql://gurupix:gurupix_local@localhost:5432/gurupix")
-        conn.close()
-        return True
-    except Exception:
-        return False
-
-
-@pytest.fixture(scope="module")
-def require_pg() -> None:
-    if not _pg_available():
-        pytest.skip("Postgres not available — start with: cd infra && docker compose up -d")
-
-
-@pytest.fixture()
-async def client(require_pg: None) -> AsyncClient:  # type: ignore[misc]
-    import app.clients.redis as redis_mod
-    from app.db.session import reset_engine
-    from app.main import create_app
-
-    reset_engine()
-    test_app = create_app()
-    transport = ASGITransport(app=test_app)
-    await redis_mod.init_redis()
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        yield c  # type: ignore[misc]
-    await redis_mod.close_redis()
-    reset_engine()
-
-
-def _unique_email() -> str:
-    return f"test-{uuid.uuid4().hex[:12]}@example.com"
+from tests.integration.conftest import unique_email
 
 
 # -- Signup -------------------------------------------------------------------
@@ -58,7 +22,7 @@ def _unique_email() -> str:
 
 @pytest.mark.asyncio
 async def test_signup_creates_user_and_returns_jwt(client: AsyncClient) -> None:
-    email = _unique_email()
+    email = unique_email()
     resp = await client.post(
         "/api/v1/auth/signup",
         json={"email": email, "password": "StrongPass1!"},
@@ -71,7 +35,7 @@ async def test_signup_creates_user_and_returns_jwt(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_signup_duplicate_email_returns_409(client: AsyncClient) -> None:
-    email = _unique_email()
+    email = unique_email()
     resp1 = await client.post(
         "/api/v1/auth/signup",
         json={"email": email, "password": "StrongPass1!"},
@@ -98,7 +62,7 @@ async def test_signup_invalid_email_returns_422(client: AsyncClient) -> None:
 async def test_signup_short_password_returns_422(client: AsyncClient) -> None:
     resp = await client.post(
         "/api/v1/auth/signup",
-        json={"email": _unique_email(), "password": "short"},
+        json={"email": unique_email(), "password": "short"},
     )
     assert resp.status_code == 422
 
@@ -108,7 +72,7 @@ async def test_signup_short_password_returns_422(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_login_correct_credentials(client: AsyncClient) -> None:
-    email = _unique_email()
+    email = unique_email()
     signup = await client.post(
         "/api/v1/auth/signup",
         json={"email": email, "password": "StrongPass1!"},
@@ -125,7 +89,7 @@ async def test_login_correct_credentials(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_login_wrong_password_returns_401(client: AsyncClient) -> None:
-    email = _unique_email()
+    email = unique_email()
     signup = await client.post(
         "/api/v1/auth/signup",
         json={"email": email, "password": "StrongPass1!"},
@@ -153,7 +117,7 @@ async def test_login_nonexistent_email_returns_401(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_me_with_valid_token(client: AsyncClient) -> None:
-    email = _unique_email()
+    email = unique_email()
     signup_resp = await client.post(
         "/api/v1/auth/signup",
         json={"email": email, "password": "StrongPass1!"},
@@ -191,6 +155,29 @@ async def test_me_with_invalid_token_returns_401(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_signup_fires_on_user_logged_in_hook(client: AsyncClient) -> None:
+    calls: list[dict[str, Any]] = []
+
+    def handler(**kw: Any) -> None:
+        calls.append(kw)
+
+    event_bus.subscribe("on_user_logged_in", handler)
+    try:
+        email = unique_email()
+        resp = await client.post(
+            "/api/v1/auth/signup",
+            json={"email": email, "password": "StrongPass1!"},
+        )
+        assert resp.status_code == 201
+
+        assert len(calls) == 1
+        assert calls[0]["method"] == "signup"
+        assert "user_id" in calls[0]
+    finally:
+        event_bus.clear()
+
+
+@pytest.mark.asyncio
 async def test_login_fires_on_user_logged_in_hook(client: AsyncClient) -> None:
     calls: list[dict[str, Any]] = []
 
@@ -199,7 +186,7 @@ async def test_login_fires_on_user_logged_in_hook(client: AsyncClient) -> None:
 
     event_bus.subscribe("on_user_logged_in", handler)
     try:
-        email = _unique_email()
+        email = unique_email()
         signup = await client.post(
             "/api/v1/auth/signup",
             json={"email": email, "password": "StrongPass1!"},
@@ -212,8 +199,46 @@ async def test_login_fires_on_user_logged_in_hook(client: AsyncClient) -> None:
         )
         assert login_resp.status_code == 200
 
-        assert len(calls) >= 1
+        # signup fires once, login fires once => at least 2 total
+        assert len(calls) >= 2
         assert calls[-1]["method"] == "email"
         assert "user_id" in calls[-1]
     finally:
         event_bus.clear()
+
+
+# -- Regression: email/password still works (Stage 4.2 requirement) -----------
+
+
+@pytest.mark.asyncio
+async def test_email_password_regression_after_oauth(client: AsyncClient) -> None:
+    """Full email/password cycle: signup -> login -> /me -- must still work."""
+    email = unique_email()
+
+    signup = await client.post(
+        "/api/v1/auth/signup",
+        json={"email": email, "password": "Regr3ss1on!"},
+    )
+    assert signup.status_code == 201
+    token_from_signup = signup.json()["access_token"]
+
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": "Regr3ss1on!"},
+    )
+    assert login.status_code == 200
+    token_from_login = login.json()["access_token"]
+
+    me1 = await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {token_from_signup}"},
+    )
+    assert me1.status_code == 200
+    assert me1.json()["email"] == email
+
+    me2 = await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {token_from_login}"},
+    )
+    assert me2.status_code == 200
+    assert me2.json()["email"] == email

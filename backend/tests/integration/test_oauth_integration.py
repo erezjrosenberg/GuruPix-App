@@ -10,50 +10,20 @@ from __future__ import annotations
 import uuid
 from unittest.mock import AsyncMock, patch
 
+import httpx
 import jwt as pyjwt
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
-
-def _pg_available() -> bool:
-    try:
-        import psycopg2
-
-        conn = psycopg2.connect("postgresql://gurupix:gurupix_local@localhost:5432/gurupix")
-        conn.close()
-        return True
-    except Exception:
-        return False
-
-
-@pytest.fixture(scope="module")
-def require_pg() -> None:
-    if not _pg_available():
-        pytest.skip("Postgres not available — start with: cd infra && docker compose up -d")
-
-
-@pytest.fixture()
-async def client(require_pg: None) -> AsyncClient:  # type: ignore[misc]
-    import app.clients.redis as redis_mod
-    from app.db.session import reset_engine
-    from app.main import create_app
-
-    reset_engine()
-    test_app = create_app()
-    transport = ASGITransport(app=test_app)
-    await redis_mod.init_redis()
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        yield c  # type: ignore[misc]
-    await redis_mod.close_redis()
-    reset_engine()
-
-
-def _unique_email() -> str:
-    return f"oauth-{uuid.uuid4().hex[:10]}@gmail.com"
+from tests.integration.conftest import unique_email
 
 
 def _fake_google_tokens(email: str, sub: str) -> dict:
-    id_token = pyjwt.encode({"sub": sub, "email": email}, "test", algorithm="HS256")
+    id_token = pyjwt.encode(
+        {"sub": sub, "email": email},
+        "test-key-for-google-at-least-32-bytes-long",
+        algorithm="HS256",
+    )
     return {"id_token": id_token, "access_token": "fake-access"}
 
 
@@ -61,7 +31,7 @@ async def _do_google_callback(
     client: AsyncClient,
     email: str,
     google_sub: str,
-) -> AsyncClient:
+) -> httpx.Response:
     """Simulate a full Google OAuth callback with mocked Google + valid state."""
     tokens = _fake_google_tokens(email, google_sub)
     mock_redis = AsyncMock()
@@ -76,7 +46,7 @@ async def _do_google_callback(
         ),
     ):
         resp = await client.get("/api/v1/auth/google/callback?code=auth-code&state=valid-state")
-    return resp  # type: ignore[return-value]
+    return resp
 
 
 # -- OAuth creates new user ---------------------------------------------------
@@ -84,7 +54,7 @@ async def _do_google_callback(
 
 @pytest.mark.asyncio
 async def test_oauth_callback_creates_new_user(client: AsyncClient) -> None:
-    email = _unique_email()
+    email = unique_email("oauth")
     resp = await _do_google_callback(client, email, f"g-{uuid.uuid4().hex[:8]}")
 
     assert resp.status_code == 200
@@ -98,7 +68,7 @@ async def test_oauth_callback_creates_new_user(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_oauth_same_google_account_no_duplicate(client: AsyncClient) -> None:
-    email = _unique_email()
+    email = unique_email("oauth")
     google_sub = f"g-{uuid.uuid4().hex[:8]}"
 
     resp1 = await _do_google_callback(client, email, google_sub)
@@ -121,7 +91,7 @@ async def test_oauth_same_google_account_no_duplicate(client: AsyncClient) -> No
 
 @pytest.mark.asyncio
 async def test_oauth_user_can_access_me(client: AsyncClient) -> None:
-    email = _unique_email()
+    email = unique_email("oauth")
     resp = await _do_google_callback(client, email, f"g-{uuid.uuid4().hex[:8]}")
     assert resp.status_code == 200
     token = resp.json()["access_token"]
@@ -139,7 +109,7 @@ async def test_oauth_user_can_access_me(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_existing_email_user_links_google(client: AsyncClient) -> None:
-    email = _unique_email()
+    email = unique_email("oauth")
 
     signup = await client.post(
         "/api/v1/auth/signup",
