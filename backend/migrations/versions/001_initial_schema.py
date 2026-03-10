@@ -6,18 +6,19 @@ Create Date: Stage 2 — Database + Migrations
 
 Creates all tables per ROADMAP_GuruPix_System_Design.md Stage 2.1.
 """
+
 from __future__ import annotations
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "001"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -46,7 +47,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("provider", "provider_account_id", name="uq_oauth_provider_account"),
     )
-    op.create_index(op.f("ix_oauth_accounts_provider"), "oauth_accounts", ["provider"], unique=False)
+    op.create_index(
+        op.f("ix_oauth_accounts_provider"), "oauth_accounts", ["provider"], unique=False
+    )
     op.create_index(
         op.f("ix_oauth_accounts_provider_account_id"),
         "oauth_accounts",
@@ -266,9 +269,7 @@ def downgrade() -> None:
     op.drop_table("item_reviews_agg")
 
     # Item availability
-    op.drop_index(
-        op.f("ix_item_availability_availability_type"), table_name="item_availability"
-    )
+    op.drop_index(op.f("ix_item_availability_availability_type"), table_name="item_availability")
     op.drop_index(op.f("ix_item_availability_region"), table_name="item_availability")
     op.drop_index(op.f("ix_item_availability_provider"), table_name="item_availability")
     op.drop_index(op.f("ix_item_availability_item_id"), table_name="item_availability")

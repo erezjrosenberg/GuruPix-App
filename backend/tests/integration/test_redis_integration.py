@@ -38,9 +38,7 @@ def _redis_available() -> bool:
 @pytest.fixture(scope="module")
 def require_redis() -> None:
     if not _redis_available():
-        pytest.skip(
-            "Redis not available. Start with: cd infra && docker compose up -d"
-        )
+        pytest.skip("Redis not available. Start with: cd infra && docker compose up -d")
 
 
 @pytest.fixture(scope="module")
@@ -67,10 +65,9 @@ def test_redis_ping(require_redis: None, settings: Settings) -> None:
 
 # ── Rate limiting ─────────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
-async def test_rate_limit_triggers_after_n_requests(
-    require_redis: None, sync_client: Any
-) -> None:
+async def test_rate_limit_triggers_after_n_requests(require_redis: None, sync_client: Any) -> None:
     """Send more requests than the limit and verify we get 429."""
     import os
 
@@ -134,9 +131,7 @@ async def test_session_id_echoed_when_provided(require_redis: None) -> None:
     transport = ASGITransport(app=test_app)
     custom = f"integration-{uuid.uuid4()}"
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        resp = await client.get(
-            "/api/v1/health", headers={"X-Session-Id": custom}
-        )
+        resp = await client.get("/api/v1/health", headers={"X-Session-Id": custom})
     assert resp.headers.get("X-Session-Id") == custom
 
 
@@ -144,9 +139,7 @@ async def test_session_id_echoed_when_provided(require_redis: None) -> None:
 
 
 @pytest.mark.asyncio
-async def test_cache_set_get_delete_roundtrip(
-    require_redis: None, sync_client: Any
-) -> None:
+async def test_cache_set_get_delete_roundtrip(require_redis: None, sync_client: Any) -> None:
     import app.clients.redis as redis_mod
 
     await redis_mod.init_redis()
@@ -167,9 +160,7 @@ async def test_cache_set_get_delete_roundtrip(
 
 
 @pytest.mark.asyncio
-async def test_cache_invalidate_namespace(
-    require_redis: None, sync_client: Any
-) -> None:
+async def test_cache_invalidate_namespace(require_redis: None, sync_client: Any) -> None:
     import app.clients.redis as redis_mod
 
     await redis_mod.init_redis()

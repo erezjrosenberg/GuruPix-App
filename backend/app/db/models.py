@@ -20,7 +20,7 @@ from __future__ import annotations
 import enum
 import uuid
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -29,7 +29,6 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
-    Index,
     Text,
     UniqueConstraint,
 )
@@ -38,13 +37,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
-
 # -----------------------------------------------------------------------------
 # Enums (stored as PostgreSQL ENUMs where used)
 # -----------------------------------------------------------------------------
 
 
-class ModelStatus(str, enum.Enum):
+class ModelStatus(enum.StrEnum):
     """Status of a model in the registry (candidate vs promoted)."""
 
     candidate = "candidate"
@@ -75,7 +73,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(Text, unique=True, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
-    oauth_accounts: Mapped[List["OAuthAccount"]] = relationship(
+    oauth_accounts: Mapped[list[OAuthAccount]] = relationship(
         "OAuthAccount", back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -105,11 +103,11 @@ class OAuthAccount(Base):
     )
     provider: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     provider_account_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    email: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    tokens_metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    email: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tokens_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
-    user: Mapped["User"] = relationship("User", back_populates="oauth_accounts")
+    user: Mapped[User] = relationship("User", back_populates="oauth_accounts")
 
     __table_args__ = (
         UniqueConstraint("provider", "provider_account_id", name="uq_oauth_provider_account"),
@@ -139,12 +137,12 @@ class Profile(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    preferences: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
-    embedding_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    region: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    languages: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text), nullable=True)
-    providers: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text), nullable=True)
-    consent: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    preferences: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    embedding_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    region: Mapped[str | None] = mapped_column(Text, nullable=True)
+    languages: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    providers: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    consent: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
@@ -170,14 +168,14 @@ class Item(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     type: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     title: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    synopsis: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    genres: Mapped[Optional[List[str]]] = mapped_column(ARRAY(Text), nullable=True)
-    cast: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
-    crew: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
-    runtime: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)  # minutes
-    release_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    language: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    metadata_: Mapped[Optional[Dict[str, Any]]] = mapped_column("metadata", JSONB, nullable=True)
+    synopsis: Mapped[str | None] = mapped_column(Text, nullable=True)
+    genres: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    cast: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    crew: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    runtime: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # minutes
+    release_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    language: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
@@ -208,7 +206,7 @@ class ItemAvailability(Base):
     )
     provider: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     region: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    url: Mapped[str | None] = mapped_column(Text, nullable=True)
     availability_type: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
@@ -241,7 +239,7 @@ class ItemReviewsAgg(Base):
     score: Mapped[float] = mapped_column(nullable=False)
     scale: Mapped[float] = mapped_column(nullable=False)  # e.g. 100.0 or 5.0
     last_updated: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    metadata_: Mapped[Optional[Dict[str, Any]]] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
 
 
 # -----------------------------------------------------------------------------
@@ -275,15 +273,15 @@ class Event(Base):
     )
     type: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    session_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True, index=True)
-    request_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True, index=True)
-    context_id: Mapped[Optional[int]] = mapped_column(
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    request_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    context_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("contexts.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
-    metadata_: Mapped[Optional[Dict[str, Any]]] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
 
 
 # -----------------------------------------------------------------------------
@@ -300,7 +298,7 @@ class Model(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     version: Mapped[str] = mapped_column(Text, unique=True, nullable=False, index=True)
-    metrics: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    metrics: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[ModelStatus] = mapped_column(
         Enum(ModelStatus, name="model_status", create_constraint=True),
         nullable=False,
@@ -329,7 +327,7 @@ class Context(Base):
         index=True,
     )
     label: Mapped[str] = mapped_column(Text, nullable=False)
-    attributes: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    attributes: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
@@ -347,14 +345,14 @@ class ContextEvent(Base):
         nullable=False,
         index=True,
     )
-    context_id: Mapped[Optional[int]] = mapped_column(
+    context_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("contexts.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    prompt_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    parsed: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    prompt_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parsed: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     retention_opt_in: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    metadata_: Mapped[Optional[Dict[str, Any]]] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)

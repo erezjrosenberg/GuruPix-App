@@ -14,15 +14,14 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
+import app.db.models  # noqa: F401
 import pytest
 from alembic import command
 from alembic.config import Config
+from app.core.config import Settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.config import Settings
-from app.db.base import Base
-import app.db.models  # noqa: F401
 
 # Skip all tests in this module if Postgres is not reachable (e.g. docker compose not up).
 def _postgres_available() -> bool:
@@ -49,17 +48,15 @@ def _make_engine_and_session():
     settings = Settings()
     sync_url = settings.get_sync_database_url()
     engine = create_engine(sync_url)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    return engine, SessionLocal
+    session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    return engine, session_factory
 
 
 @pytest.fixture(scope="module")
 def require_postgres():
     """Skip the whole module if Postgres is not available."""
     if not _postgres_available():
-        pytest.skip(
-            "Postgres not available. Start with: cd infra && docker compose up -d"
-        )
+        pytest.skip("Postgres not available. Start with: cd infra && docker compose up -d")
 
 
 @pytest.fixture(scope="module")
@@ -96,28 +93,28 @@ def test_alembic_upgrade_idempotent(alembic_config: Config) -> None:
 
 def test_smoke_users(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select a user."""
-    _, SessionLocal = db_engine_and_session
+    _, session_factory = db_engine_and_session
     user_id = uuid.uuid4()
-    with SessionLocal() as session:
+    with session_factory() as session:
         user = app.db.models.User(id=user_id, email="smoke@example.com")
         session.add(user)
         session.commit()
         session.refresh(user)
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.User, user_id)
         assert row is not None
         assert row.email == "smoke@example.com"
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.delete(session.get(app.db.models.User, user_id))
         session.commit()
 
 
 def test_smoke_oauth_accounts(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select an oauth_account (requires a user)."""
-    _, SessionLocal = db_engine_and_session
+    _, session_factory = db_engine_and_session
     user_id = uuid.uuid4()
     oauth_id = uuid.uuid4()
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.add(app.db.models.User(id=user_id, email="oauth-smoke@example.com"))
         session.add(
             app.db.models.OAuthAccount(
@@ -128,11 +125,11 @@ def test_smoke_oauth_accounts(db_engine_and_session: tuple[Any, Any]) -> None:
             )
         )
         session.commit()
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.OAuthAccount, oauth_id)
         assert row is not None
         assert row.provider == "google"
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.delete(session.get(app.db.models.OAuthAccount, oauth_id))
         session.delete(session.get(app.db.models.User, user_id))
         session.commit()
@@ -140,9 +137,9 @@ def test_smoke_oauth_accounts(db_engine_and_session: tuple[Any, Any]) -> None:
 
 def test_smoke_profiles(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select a profile (requires a user)."""
-    _, SessionLocal = db_engine_and_session
+    _, session_factory = db_engine_and_session
     user_id = uuid.uuid4()
-    with SessionLocal() as session:
+    with session_factory() as session:
         user = app.db.models.User(id=user_id, email="profile-smoke@example.com")
         session.add(user)
         session.flush()  # ensure user is inserted before profile (FK)
@@ -154,11 +151,11 @@ def test_smoke_profiles(db_engine_and_session: tuple[Any, Any]) -> None:
             )
         )
         session.commit()
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.Profile, user_id)
         assert row is not None
         assert row.region == "US"
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.delete(session.get(app.db.models.Profile, user_id))
         session.delete(session.get(app.db.models.User, user_id))
         session.commit()
@@ -166,8 +163,8 @@ def test_smoke_profiles(db_engine_and_session: tuple[Any, Any]) -> None:
 
 def test_smoke_items(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select an item."""
-    _, SessionLocal = db_engine_and_session
-    with SessionLocal() as session:
+    _, session_factory = db_engine_and_session
+    with session_factory() as session:
         item = app.db.models.Item(
             type="movie",
             title="Smoke Test Movie",
@@ -178,19 +175,19 @@ def test_smoke_items(db_engine_and_session: tuple[Any, Any]) -> None:
         session.commit()
         session.refresh(item)
         item_id = item.id
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.Item, item_id)
         assert row is not None
         assert row.title == "Smoke Test Movie"
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.delete(session.get(app.db.models.Item, item_id))
         session.commit()
 
 
 def test_smoke_item_availability(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select item_availability (requires an item)."""
-    _, SessionLocal = db_engine_and_session
-    with SessionLocal() as session:
+    _, session_factory = db_engine_and_session
+    with session_factory() as session:
         item = app.db.models.Item(type="movie", title="Avail Smoke")
         session.add(item)
         session.commit()
@@ -207,11 +204,11 @@ def test_smoke_item_availability(db_engine_and_session: tuple[Any, Any]) -> None
         session.commit()
         session.refresh(av)
         av_id = av.id
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.ItemAvailability, av_id)
         assert row is not None
         assert row.provider == "Netflix"
-    with SessionLocal() as session:
+    with session_factory() as session:
         # Delete child before parent so CASCADE does not remove the child first.
         session.delete(session.get(app.db.models.ItemAvailability, av_id))
         session.flush()
@@ -221,8 +218,8 @@ def test_smoke_item_availability(db_engine_and_session: tuple[Any, Any]) -> None
 
 def test_smoke_item_reviews_agg(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select item_reviews_agg (requires an item)."""
-    _, SessionLocal = db_engine_and_session
-    with SessionLocal() as session:
+    _, session_factory = db_engine_and_session
+    with session_factory() as session:
         item = app.db.models.Item(type="movie", title="Review Smoke")
         session.add(item)
         session.commit()
@@ -238,11 +235,11 @@ def test_smoke_item_reviews_agg(db_engine_and_session: tuple[Any, Any]) -> None:
         session.commit()
         session.refresh(rev)
         rev_id = rev.id
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.ItemReviewsAgg, rev_id)
         assert row is not None
         assert row.source == "RT_CRITICS"
-    with SessionLocal() as session:
+    with session_factory() as session:
         # Delete child before parent so CASCADE does not remove the child first.
         session.delete(session.get(app.db.models.ItemReviewsAgg, rev_id))
         session.flush()
@@ -252,21 +249,23 @@ def test_smoke_item_reviews_agg(db_engine_and_session: tuple[Any, Any]) -> None:
 
 def test_smoke_contexts(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select a context (requires a user)."""
-    _, SessionLocal = db_engine_and_session
+    _, session_factory = db_engine_and_session
     user_id = uuid.uuid4()
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.add(app.db.models.User(id=user_id, email="context-smoke@example.com"))
         session.commit()
-        ctx = app.db.models.Context(user_id=user_id, label="Date night", attributes={"mood": "cozy"})
+        ctx = app.db.models.Context(
+            user_id=user_id, label="Date night", attributes={"mood": "cozy"}
+        )
         session.add(ctx)
         session.commit()
         session.refresh(ctx)
         ctx_id = ctx.id
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.Context, ctx_id)
         assert row is not None
         assert row.label == "Date night"
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.delete(session.get(app.db.models.Context, ctx_id))
         session.delete(session.get(app.db.models.User, user_id))
         session.commit()
@@ -274,8 +273,8 @@ def test_smoke_contexts(db_engine_and_session: tuple[Any, Any]) -> None:
 
 def test_smoke_models(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select a model (registry)."""
-    _, SessionLocal = db_engine_and_session
-    with SessionLocal() as session:
+    _, session_factory = db_engine_and_session
+    with session_factory() as session:
         m = app.db.models.Model(
             version="v0.1.0-smoke",
             metrics={"ndcg@10": 0.5},
@@ -285,20 +284,20 @@ def test_smoke_models(db_engine_and_session: tuple[Any, Any]) -> None:
         session.commit()
         session.refresh(m)
         m_id = m.id
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.Model, m_id)
         assert row is not None
         assert row.version == "v0.1.0-smoke"
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.delete(session.get(app.db.models.Model, m_id))
         session.commit()
 
 
 def test_smoke_events(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select an event (requires user and item)."""
-    _, SessionLocal = db_engine_and_session
+    _, session_factory = db_engine_and_session
     user_id = uuid.uuid4()
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.add(app.db.models.User(id=user_id, email="event-smoke@example.com"))
         item = app.db.models.Item(type="movie", title="Event Smoke")
         session.add(item)
@@ -316,11 +315,11 @@ def test_smoke_events(db_engine_and_session: tuple[Any, Any]) -> None:
         session.commit()
         session.refresh(ev)
         ev_id = ev.id
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.Event, ev_id)
         assert row is not None
         assert row.type == "like"
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.delete(session.get(app.db.models.Event, ev_id))
         session.delete(session.get(app.db.models.Item, item_id))
         session.delete(session.get(app.db.models.User, user_id))
@@ -329,9 +328,9 @@ def test_smoke_events(db_engine_and_session: tuple[Any, Any]) -> None:
 
 def test_smoke_context_events(db_engine_and_session: tuple[Any, Any]) -> None:
     """Insert and select a context_event (requires a user)."""
-    _, SessionLocal = db_engine_and_session
+    _, session_factory = db_engine_and_session
     user_id = uuid.uuid4()
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.add(app.db.models.User(id=user_id, email="ctxev-smoke@example.com"))
         session.commit()
         ce = app.db.models.ContextEvent(
@@ -343,11 +342,11 @@ def test_smoke_context_events(db_engine_and_session: tuple[Any, Any]) -> None:
         session.commit()
         session.refresh(ce)
         ce_id = ce.id
-    with SessionLocal() as session:
+    with session_factory() as session:
         row = session.get(app.db.models.ContextEvent, ce_id)
         assert row is not None
         assert row.parsed == {"mood": "cozy"}
-    with SessionLocal() as session:
+    with session_factory() as session:
         session.delete(session.get(app.db.models.ContextEvent, ce_id))
         session.delete(session.get(app.db.models.User, user_id))
         session.commit()

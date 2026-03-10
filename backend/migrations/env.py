@@ -21,11 +21,10 @@ from sqlalchemy import engine_from_config, pool
 # Add the backend root to the path so "app" is importable when running from backend/.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.config import Settings
-from app.db.base import Base
-
 # Import all models so that Base.metadata has every table (required for autogenerate).
 import app.db.models  # noqa: F401
+from app.core.config import Settings
+from app.db.base import Base
 
 config = context.config
 if config.config_file_name is not None:

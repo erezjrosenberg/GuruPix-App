@@ -5,6 +5,8 @@ import App from "./App";
 describe("App", () => {
   it("renders GuruPix title", () => {
     render(<App />);
-    expect(screen.getByRole("heading", { name: /gurupix/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /gurupix/i })
+    ).toBeInTheDocument();
   });
 });

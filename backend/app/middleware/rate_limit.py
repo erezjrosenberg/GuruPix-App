@@ -72,9 +72,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     detail="Rate limit exceeded. Try again later.",
                     request_id=getattr(request.state, "request_id", ""),
                 )
-                response = JSONResponse(
-                    status_code=429, content=body.model_dump()
-                )
+                response = JSONResponse(status_code=429, content=body.model_dump())
                 self._set_rate_headers(response, remaining, reset_at)
                 return response
 
@@ -86,9 +84,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             logger.warning("Redis error in rate limiter — fail-open", exc_info=True)
             return await call_next(request)
 
-    def _set_rate_headers(
-        self, response: Response, remaining: int, reset_at: int
-    ) -> None:
+    def _set_rate_headers(self, response: Response, remaining: int, reset_at: int) -> None:
         response.headers["X-RateLimit-Limit"] = str(self.max_requests)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
         response.headers["X-RateLimit-Reset"] = str(reset_at)
