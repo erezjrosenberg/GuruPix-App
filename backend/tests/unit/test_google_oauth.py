@@ -123,8 +123,14 @@ async def test_google_callback_success_returns_jwt() -> None:
 
     with (
         patch("app.api.auth.get_redis_client", return_value=mock_redis),
-        patch("app.api.auth.google_oauth.exchange_code_for_tokens", new_callable=AsyncMock, return_value=tokens),
-        patch("app.api.auth.find_or_create_oauth_user", new_callable=AsyncMock, return_value=user_mock),
+        patch(
+            "app.api.auth.google_oauth.exchange_code_for_tokens",
+            new_callable=AsyncMock,
+            return_value=tokens,
+        ),
+        patch(
+            "app.api.auth.find_or_create_oauth_user", new_callable=AsyncMock, return_value=user_mock
+        ),
     ):
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             resp = await client.get("/api/v1/auth/google/callback?code=auth-code&state=valid")

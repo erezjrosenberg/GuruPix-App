@@ -56,7 +56,8 @@ async def exchange_code_for_tokens(code: str) -> dict[str, Any]:
             },
         )
         resp.raise_for_status()
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
 
 
 def extract_user_info_from_id_token(id_token: str) -> dict[str, Any]:

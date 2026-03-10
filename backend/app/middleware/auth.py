@@ -31,7 +31,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         request.state.user_id = None
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
-            token = auth_header[len("Bearer "):]
+            token = auth_header[len("Bearer ") :]
             try:
                 payload = decode_access_token(token)
                 request.state.user_id = payload.get("sub")

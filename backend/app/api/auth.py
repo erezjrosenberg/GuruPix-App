@@ -119,7 +119,9 @@ async def google_callback(
         provider="google",
         provider_account_id=google_sub,
         email=google_email,
-        tokens_metadata={"id_token_claims": {k: user_info[k] for k in ("sub", "email") if k in user_info}},
+        tokens_metadata={
+            "id_token_claims": {k: user_info[k] for k in ("sub", "email") if k in user_info}
+        },
     )
 
     jwt_token = create_access_token({"sub": str(user.id)})

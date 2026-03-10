@@ -20,9 +20,7 @@ def _pg_available() -> bool:
     try:
         import psycopg2
 
-        conn = psycopg2.connect(
-            "postgresql://gurupix:gurupix_local@localhost:5432/gurupix"
-        )
+        conn = psycopg2.connect("postgresql://gurupix:gurupix_local@localhost:5432/gurupix")
         conn.close()
         return True
     except Exception:

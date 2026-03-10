@@ -19,9 +19,7 @@ def _pg_available() -> bool:
     try:
         import psycopg2
 
-        conn = psycopg2.connect(
-            "postgresql://gurupix:gurupix_local@localhost:5432/gurupix"
-        )
+        conn = psycopg2.connect("postgresql://gurupix:gurupix_local@localhost:5432/gurupix")
         conn.close()
         return True
     except Exception:
@@ -77,9 +75,7 @@ async def _do_google_callback(
             return_value=tokens,
         ),
     ):
-        resp = await client.get(
-            "/api/v1/auth/google/callback?code=auth-code&state=valid-state"
-        )
+        resp = await client.get("/api/v1/auth/google/callback?code=auth-code&state=valid-state")
     return resp  # type: ignore[return-value]
 
 
