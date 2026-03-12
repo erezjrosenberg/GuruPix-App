@@ -33,24 +33,12 @@ test-backend-integration: docker_up
 test-frontend:
 	cd frontend && npm run test
 
-# E2E tests (starts backend, runs Playwright against it, then stops backend)
+# E2E tests (Playwright auto-starts frontend via webServer at localhost:5173)
 test-e2e:
-	@cd backend && .venv/bin/python -m uvicorn app.main:app --port 8000 & \
-		SERVER_PID=$$!; \
-		sleep 2; \
-		cd tests/e2e && E2E_BASE_URL=http://localhost:8000 npx playwright test --reporter=list; \
-		EXIT=$$?; \
-		kill $$SERVER_PID 2>/dev/null; \
-		exit $$EXIT
+	cd tests/e2e && npx playwright test --reporter=list
 
 # Run ALL tests (starts containers, then backend + frontend + e2e)
 test: docker_up
 	cd backend && .venv/bin/python -m pytest tests/unit tests/integration -v
 	cd frontend && npm run test
-	@cd backend && .venv/bin/python -m uvicorn app.main:app --port 8000 & \
-		SERVER_PID=$$!; \
-		sleep 2; \
-		cd tests/e2e && E2E_BASE_URL=http://localhost:8000 npx playwright test --reporter=list; \
-		EXIT=$$?; \
-		kill $$SERVER_PID 2>/dev/null; \
-		exit $$EXIT
+	cd tests/e2e && npx playwright test --reporter=list

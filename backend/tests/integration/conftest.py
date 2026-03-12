@@ -9,10 +9,15 @@ from httpx import ASGITransport, AsyncClient
 
 
 def _pg_available() -> bool:
+    """Use Settings so CI (port 5433) and local (5432) both work."""
     try:
         import psycopg2
 
-        conn = psycopg2.connect("postgresql://gurupix:gurupix_local@localhost:5432/gurupix")
+        from app.core.config import Settings
+
+        settings = Settings()
+        url = settings.get_sync_database_url()
+        conn = psycopg2.connect(url)
         conn.close()
         return True
     except Exception:
