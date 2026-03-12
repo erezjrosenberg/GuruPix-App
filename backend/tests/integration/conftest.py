@@ -12,7 +12,6 @@ def _pg_available() -> bool:
     """Use Settings so CI (port 5433) and local (5432) both work."""
     try:
         import psycopg2
-
         from app.core.config import Settings
 
         settings = Settings()

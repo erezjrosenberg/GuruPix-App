@@ -84,9 +84,10 @@ jobs:
       POSTGRES_PORT: 5433
       REDIS_PORT: 6380
       QDRANT_PORT: 6335
-      # Backend must connect to the same port compose exposes (5433)
+      # Backend must connect to the same ports compose exposes
       DATABASE_URL: postgresql+asyncpg://gurupix:gurupix_local@localhost:5433/gurupix
       DATABASE_URL_SYNC: postgresql://gurupix:gurupix_local@localhost:5433/gurupix
+      REDIS_URL: redis://localhost:6380/0
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -107,6 +108,13 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_PORT: 5433
+      REDIS_PORT: 6380
+      QDRANT_PORT: 6335
+      DATABASE_URL: postgresql+asyncpg://gurupix:gurupix_local@localhost:5433/gurupix
+      DATABASE_URL_SYNC: postgresql://gurupix:gurupix_local@localhost:5433/gurupix
+      REDIS_URL: redis://localhost:6380/0
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
