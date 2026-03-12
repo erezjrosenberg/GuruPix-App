@@ -98,12 +98,13 @@ jobs:
         run: |
           cd infra
           docker compose up -d
-          sleep 10
+          sleep 15
           docker compose ps
       - name: Install backend and run integration tests
         run: |
           cd backend
           pip install -e ".[dev]"
+          alembic upgrade head
           pytest tests/integration -v
 
   e2e:
