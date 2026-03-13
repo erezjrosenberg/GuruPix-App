@@ -70,6 +70,7 @@ frontend/vite.config.d.ts
 # --- Playwright (e2e) ---
 tests/e2e/playwright-report/
 tests/e2e/test-results/
+tests/e2e/.playwright-browsers/
 
 # --- IDE / editor (optional: remove .cursor if you want to commit Cursor rules) ---
 # .cursor/

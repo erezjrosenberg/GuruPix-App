@@ -8,15 +8,19 @@ up the user in the database, and raises 401 if anything is invalid.
 
 from __future__ import annotations
 
+import logging
 import uuid
 
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import Settings
 from app.core.security import decode_access_token
 from app.db.models import User
 from app.db.session import get_db
 from app.services.auth import get_user_by_id
+
+logger = logging.getLogger("gurupix.auth")
 
 
 def _extract_bearer_token(request: Request) -> str:
@@ -36,6 +40,7 @@ async def get_current_user(
     try:
         payload = decode_access_token(token)
     except Exception:
+        logger.warning("Auth failed: invalid or expired token")
         raise HTTPException(status_code=401, detail="Invalid or expired token") from None
 
     sub = payload.get("sub")
@@ -63,8 +68,6 @@ async def get_current_admin_user(
 
     Use for admin-only endpoints like POST /ingest/items.
     """
-    from app.core.config import Settings
-
     settings = Settings()
     admin_emails = settings.get_admin_emails_set()
     if not admin_emails:
@@ -73,5 +76,6 @@ async def get_current_admin_user(
             detail="Admin access not configured (ADMIN_EMAILS empty)",
         )
     if current_user.email.lower() not in admin_emails:
+        logger.warning("Admin access denied", extra={"user_id": str(current_user.id)})
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user

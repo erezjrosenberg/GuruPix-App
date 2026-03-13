@@ -15,6 +15,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.auth import router as auth_router
 from app.api.availability import router as availability_router
+from app.api.contexts import router as contexts_router
+from app.api.events import router as events_router
 from app.api.ingest import router as ingest_router
 from app.api.items import router as items_router
 from app.api.profiles import router as profiles_router
@@ -22,6 +24,7 @@ from app.api.reviews import router as reviews_router
 from app.api.system import router as system_router
 from app.clients.redis import close_redis, init_redis
 from app.core.version import get_app_version
+from app.hooks.handlers import register_handlers
 from app.middleware import (
     AuthMiddleware,
     ErrorMiddleware,
@@ -32,6 +35,8 @@ from app.middleware import (
     TimingMiddleware,
 )
 from app.schemas.system import ErrorResponse
+
+register_handlers()
 
 
 def _build_error_response(status_code: int, detail: str, request: Request) -> JSONResponse:
@@ -115,6 +120,12 @@ def create_app() -> FastAPI:
 
     # Profile endpoints: GET/PATCH/POST /profiles/me
     app.include_router(profiles_router)
+
+    # Events: POST /events (user feedback: like, dislike, etc.)
+    app.include_router(events_router)
+
+    # Contexts: CRUD for context presets (date night, cozy, etc.)
+    app.include_router(contexts_router)
 
     # Ingest endpoints: admin-only seed loading under /api/v1/ingest
     app.include_router(ingest_router)

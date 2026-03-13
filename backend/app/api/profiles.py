@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +14,7 @@ from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate
 from app.services.profile import create_profile, get_profile_response, update_profile
 
 router = APIRouter(prefix="/api/v1/profiles", tags=["profiles"])
+logger = logging.getLogger("gurupix.profiles")
 
 
 @router.get("/me", response_model=ProfileResponse | None)
@@ -31,15 +34,20 @@ async def create_me(
 ) -> ProfileResponse:
     """Create profile (onboarding). Requires consent_data_processing=true."""
     if not body.consent_data_processing:
+        logger.warning("Profile create rejected: consent not given")
         raise HTTPException(
             status_code=400,
             detail="You must accept data processing to continue",
         )
     try:
-        return await create_profile(db, current_user, body)
+        profile = await create_profile(db, current_user, body)
+        logger.info("Profile created", extra={"user_id": str(current_user.id)})
+        return profile
     except ValueError as e:
         if "already exists" in str(e):
             raise HTTPException(status_code=409, detail="Profile already exists") from e
+        if "data processing" in str(e).lower():
+            raise HTTPException(status_code=400, detail=str(e)) from e
         raise
 
 
@@ -49,5 +57,13 @@ async def patch_me(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ProfileResponse:
-    """Update profile. Creates one if missing (upsert)."""
-    return await update_profile(db, current_user, body)
+    """Update profile. Creates one if missing (upsert). When creating, consent_data_processing must be True."""
+    try:
+        profile = await update_profile(db, current_user, body)
+        logger.info("Profile updated", extra={"user_id": str(current_user.id)})
+        return profile
+    except ValueError as e:
+        if "data processing" in str(e).lower():
+            logger.warning("Profile patch rejected: consent not given for new profile")
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        raise

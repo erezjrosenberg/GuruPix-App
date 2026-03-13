@@ -63,11 +63,11 @@ if [[ ! -d frontend/node_modules ]]; then
   cd frontend && npm install && cd "$ROOT"
 fi
 
-# 7. DB migrations + dev user seed
+# 7. DB migrations (admin created by migration 003; data persists in Postgres volume)
 echo "Running database migrations..."
 (cd backend && .venv/bin/python -m alembic upgrade head) || true
-echo "Seeding dev users (admin@gurupix.com / admin123)..."
-(cd backend && PYTHONPATH=. .venv/bin/python scripts/seed_users.py) || true
+
+(cd backend && PYTHONPATH=. .venv/bin/python scripts/seed_users.py 2>/dev/null) || true
 
 echo ""
 echo "All set. Starting backend + frontend..."

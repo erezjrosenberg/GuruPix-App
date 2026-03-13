@@ -62,9 +62,7 @@ async def create_profile(
         region=data.region,
         languages=data.languages,
         providers=data.providers,
-        consent={"data_processing": data.consent_data_processing}
-        if data.consent_data_processing
-        else None,
+        consent={"data_processing": True},
     )
     db.add(profile)
     await db.commit()
@@ -77,9 +75,11 @@ async def update_profile(
     user: User,
     data: ProfileUpdate,
 ) -> ProfileResponse:
-    """Update profile. Creates one if missing (upsert)."""
+    """Update profile. Creates one if missing (upsert). When creating, consent_data_processing must be True."""
     profile = await get_profile(db, user.id)
     if profile is None:
+        if not data.consent_data_processing:
+            raise ValueError("You must accept data processing to create a profile")
         prefs = {"display_name": data.display_name, "bio": data.bio}
         profile = Profile(
             user_id=user.id,
@@ -87,6 +87,7 @@ async def update_profile(
             region=data.region,
             languages=data.languages,
             providers=data.providers,
+            consent={"data_processing": True},
         )
         db.add(profile)
     else:

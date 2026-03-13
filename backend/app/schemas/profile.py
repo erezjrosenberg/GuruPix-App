@@ -24,13 +24,21 @@ class ProfileResponse(BaseModel):
 
 
 class ProfileUpdate(BaseModel):
-    """Fields user can update. Email is NOT included."""
+    """Fields user can update. Email is NOT included.
+
+    When creating a new profile via PATCH (upsert), consent_data_processing
+    must be True to avoid bypassing the consent requirement.
+    """
 
     display_name: str | None = Field(None, max_length=100)
     bio: str | None = Field(None, max_length=500)
     region: str | None = Field(None, max_length=10)
     languages: list[str] | None = None
     providers: list[str] | None = None
+    consent_data_processing: bool | None = Field(
+        None,
+        description="Required when creating new profile via PATCH; must be True",
+    )
 
 
 class ProfileCreate(BaseModel):

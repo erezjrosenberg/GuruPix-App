@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """
-Seed admin + erez users for local development.
+One-time cleanup: remove erez user if present.
 
-- Admin: admin@gurupix.com / admin123 (add to ADMIN_EMAILS for ingest)
-- Erez:  erez@gurupix.com / erez1234 (normal user)
-
-Usage: cd backend && PYTHONPATH=. python scripts/seed_users.py
+Admin is created by migration 003. This script only removes erez.
+After the first run, this is a no-op. Safe to run on every startup.
 """
 from __future__ import annotations
 
@@ -21,25 +19,13 @@ from sqlalchemy import delete
 
 from app.db.models import User
 from app.db.session import _get_session_factory
-from app.services.auth import create_user
 
 
 async def main() -> None:
     factory = _get_session_factory()
     async with factory() as db:
-        # 1. Delete all users
-        await db.execute(delete(User))
+        await db.execute(delete(User).where(User.email == "erez@gurupix.com"))
         await db.commit()
-
-        # 2. Create admin
-        admin = await create_user(db, "admin@gurupix.com", "admin123")
-        print(f"Created admin: admin@gurupix.com / admin123")
-
-        # 3. Create erez (normal user)
-        erez = await create_user(db, "erez@gurupix.com", "erez1234")
-        print(f"Created erez: erez@gurupix.com / erez1234")
-
-        print("\nAdd admin@gurupix.com to ADMIN_EMAILS in .env for ingest.")
 
 
 if __name__ == "__main__":

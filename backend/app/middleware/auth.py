@@ -15,15 +15,11 @@ If the header is missing or the token is invalid the request still proceeds
 
 from __future__ import annotations
 
-import logging
-
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 
 from app.core.security import decode_access_token
-
-logger = logging.getLogger(__name__)
 
 
 class AuthMiddleware(BaseHTTPMiddleware):

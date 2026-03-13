@@ -78,16 +78,33 @@ async def test_get_profile_after_create(client: AsyncClient, auth_headers: dict)
 
 @pytest.mark.asyncio
 async def test_patch_profile_upserts(client: AsyncClient, auth_headers: dict):
-    """PATCH creates or updates profile."""
+    """PATCH creates or updates profile. Creating requires consent."""
     resp = await client.patch(
         "/api/v1/profiles/me",
         headers=auth_headers,
-        json={"display_name": "Patched", "region": "UK"},
+        json={
+            "display_name": "Patched",
+            "region": "UK",
+            "consent_data_processing": True,
+        },
     )
     assert resp.status_code == 200
     data = resp.json()
     assert data["display_name"] == "Patched"
     assert data["region"] == "UK"
+
+
+@pytest.mark.asyncio
+async def test_patch_profile_create_without_consent_returns_400(
+    client: AsyncClient, auth_headers: dict
+):
+    """PATCH creating new profile without consent returns 400."""
+    resp = await client.patch(
+        "/api/v1/profiles/me",
+        headers=auth_headers,
+        json={"display_name": "No Consent", "consent_data_processing": False},
+    )
+    assert resp.status_code == 400
 
 
 @pytest.mark.asyncio

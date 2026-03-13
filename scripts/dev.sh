@@ -21,7 +21,7 @@ if [[ -n "$PIDS" ]]; then
   sleep 2
 fi
 
-echo "Running migrations and seeding dev users..."
+echo "Running migrations..."
 (cd backend && .venv/bin/python -m alembic upgrade head 2>/dev/null; PYTHONPATH=. .venv/bin/python scripts/seed_users.py 2>/dev/null) || true
 
 echo "Starting backend..."
