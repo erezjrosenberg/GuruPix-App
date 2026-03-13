@@ -17,15 +17,13 @@ function renderCatalog() {
   return render(
     <BrowserRouter>
       <CatalogPage />
-    </BrowserRouter>,
+    </BrowserRouter>
   );
 }
 
 describe("CatalogPage", () => {
   it("shows loading state initially", () => {
-    vi.mocked(api.api.get).mockImplementation(
-      () => new Promise(() => {}),
-    );
+    vi.mocked(api.api.get).mockImplementation(() => new Promise(() => {}));
     renderCatalog();
     expect(screen.getByText(/loading catalog/i)).toBeInTheDocument();
   });
@@ -45,7 +43,12 @@ describe("CatalogPage", () => {
         },
       ])
       .mockResolvedValueOnce([
-        { provider: "Netflix", region: "US", url: "https://n.com", availability_type: "stream" },
+        {
+          provider: "Netflix",
+          region: "US",
+          url: "https://n.com",
+          availability_type: "stream",
+        },
       ])
       .mockResolvedValueOnce([
         { source: "RT_CRITICS", score: 91, scale: 100, normalized_score: 91 },
@@ -61,13 +64,14 @@ describe("CatalogPage", () => {
   });
 
   it("shows empty state when no items", async () => {
-    vi.mocked(api.api.get)
-      .mockResolvedValueOnce([]);
+    vi.mocked(api.api.get).mockResolvedValueOnce([]);
 
     renderCatalog();
 
     await waitFor(() => {
-      expect(screen.getByText(/no items in catalog|run seed ingestion/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/no items in catalog|run seed ingestion/i)
+      ).toBeInTheDocument();
     });
   });
 });

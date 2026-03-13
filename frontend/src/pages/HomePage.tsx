@@ -7,7 +7,12 @@ const SAVE_DEBOUNCE_MS = 800;
 
 export default function HomePage() {
   const { user, loading, logout } = useAuth();
-  const { profile, needsOnboarding, patchProfile, loading: profileLoading } = useProfile();
+  const {
+    profile,
+    needsOnboarding,
+    patchProfile,
+    loading: profileLoading,
+  } = useProfile();
   const isAdmin = user?.is_admin ?? false;
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
@@ -186,7 +191,14 @@ export default function HomePage() {
         <h2 style={{ marginTop: 0, marginBottom: 16 }}>Your profile</h2>
 
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 4 }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 12,
+              color: "#666",
+              marginBottom: 4,
+            }}
+          >
             Email (read-only)
           </label>
           <input
@@ -206,7 +218,14 @@ export default function HomePage() {
         </div>
 
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 4 }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 12,
+              color: "#666",
+              marginBottom: 4,
+            }}
+          >
             Display name
           </label>
           <input
@@ -225,7 +244,14 @@ export default function HomePage() {
         </div>
 
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 4 }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 12,
+              color: "#666",
+              marginBottom: 4,
+            }}
+          >
             Bio
           </label>
           <textarea
@@ -245,7 +271,14 @@ export default function HomePage() {
         </div>
 
         <div style={{ marginBottom: 0 }}>
-          <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 4 }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 12,
+              color: "#666",
+              marginBottom: 4,
+            }}
+          >
             Region
           </label>
           <select
@@ -268,7 +301,9 @@ export default function HomePage() {
         </div>
 
         {saved && (
-          <p style={{ marginTop: 12, fontSize: 13, color: "#16a34a" }}>Changes saved.</p>
+          <p style={{ marginTop: 12, fontSize: 13, color: "#16a34a" }}>
+            Changes saved.
+          </p>
         )}
       </section>
 

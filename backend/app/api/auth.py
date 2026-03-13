@@ -15,8 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_current_user
 from app.clients import google_oauth
-from app.core.config import Settings
 from app.clients.redis import get_redis_client
+from app.core.config import Settings
 from app.core.security import create_access_token
 from app.db.models import User
 from app.db.session import get_db

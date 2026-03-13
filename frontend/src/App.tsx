@@ -13,12 +13,15 @@ function App() {
       <AuthProvider>
         <ProfileProvider>
           <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/catalog" element={<CatalogPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/auth/google/callback"
+              element={<GoogleCallbackPage />}
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </ProfileProvider>
       </AuthProvider>

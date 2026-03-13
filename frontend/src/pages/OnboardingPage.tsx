@@ -63,7 +63,9 @@ export default function OnboardingPage() {
 
   return (
     <div style={{ maxWidth: 480, margin: "60px auto", padding: "0 20px" }}>
-      <h1 style={{ textAlign: "center", marginBottom: 8 }}>Welcome to GuruPix</h1>
+      <h1 style={{ textAlign: "center", marginBottom: 8 }}>
+        Welcome to GuruPix
+      </h1>
       <p style={{ textAlign: "center", color: "#666", marginBottom: 32 }}>
         Tell us a bit about yourself so we can personalize your experience.
       </p>
@@ -153,7 +155,14 @@ export default function OnboardingPage() {
             border: "1px solid #eee",
           }}
         >
-          <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              cursor: "pointer",
+            }}
+          >
             <input
               type="checkbox"
               checked={consent}
@@ -161,9 +170,12 @@ export default function OnboardingPage() {
               style={{ marginTop: 4 }}
             />
             <span>
-              I agree to GuruPix processing my preferences and usage data to provide personalized
-              recommendations. I understand this data is used solely to improve my experience.{" "}
-              <a href="/privacy" style={{ color: "#2563eb" }}>Privacy policy</a>
+              I agree to GuruPix processing my preferences and usage data to
+              provide personalized recommendations. I understand this data is
+              used solely to improve my experience.{" "}
+              <a href="/privacy" style={{ color: "#2563eb" }}>
+                Privacy policy
+              </a>
             </span>
           </label>
         </div>

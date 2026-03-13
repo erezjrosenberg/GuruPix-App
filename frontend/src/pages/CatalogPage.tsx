@@ -60,10 +60,10 @@ export default function CatalogPage() {
         for (const item of itemsData) {
           const [av, rv] = await Promise.all([
             api.get<Availability[]>(
-              `/api/v1/availability?item_id=${item.id}&region=${DEFAULT_REGION}`,
+              `/api/v1/availability?item_id=${item.id}&region=${DEFAULT_REGION}`
             ),
             api.get<ReviewAggregate[]>(
-              `/api/v1/reviews/aggregate?item_id=${item.id}`,
+              `/api/v1/reviews/aggregate?item_id=${item.id}`
             ),
           ]);
           if (cancelled) return;
@@ -77,7 +77,7 @@ export default function CatalogPage() {
           setError(
             e && typeof e === "object" && "detail" in e
               ? String((e as { detail: string }).detail)
-              : "Failed to load catalog",
+              : "Failed to load catalog"
           );
         }
       } finally {
@@ -165,8 +165,9 @@ export default function CatalogPage() {
                     .map(
                       (r) =>
                         `${r.source.replace(/_/g, " ")} ${
-                          r.normalized_score ?? Math.round((r.score / r.scale) * 100)
-                        }%`,
+                          r.normalized_score ??
+                          Math.round((r.score / r.scale) * 100)
+                        }%`
                     )
                     .join(" / ")}
                 </div>
@@ -185,7 +186,13 @@ export default function CatalogPage() {
                 </p>
               )}
               {avail.length > 0 && (
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+                <div
+                  style={{
+                    marginTop: 12,
+                    paddingTop: 12,
+                    borderTop: "1px solid #e5e7eb",
+                  }}
+                >
                   <strong style={{ fontSize: 12, color: "#6b7280" }}>
                     Where to watch:
                   </strong>
@@ -204,7 +211,13 @@ export default function CatalogPage() {
                         ) : (
                           <span style={{ fontSize: 13 }}>{a.provider}</span>
                         )}
-                        <span style={{ fontSize: 11, color: "#9ca3af", marginLeft: 4 }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: "#9ca3af",
+                            marginLeft: 4,
+                          }}
+                        >
                           ({a.availability_type})
                         </span>
                       </li>
