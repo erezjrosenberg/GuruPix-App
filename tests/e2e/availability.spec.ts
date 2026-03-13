@@ -125,8 +125,15 @@ test.describe("Catalog page - where to watch", () => {
       }),
     );
 
+    // Set token so AuthContext fetches user and shows logged-in home view
+    await page.goto("/login");
+    await page.evaluate(() => {
+      localStorage.setItem("gurupix_token", "fake-token-for-catalog-test");
+      window.dispatchEvent(new CustomEvent("gurupix:token-set"));
+    });
     await page.goto("/");
-    await page.getByRole("link", { name: /browse catalog/i }).click();
+    const catalogLink = page.getByRole("link", { name: /browse catalog/i });
+    await catalogLink.click({ timeout: 15000 });
 
     await expect(page).toHaveURL(/\/catalog/);
   });
