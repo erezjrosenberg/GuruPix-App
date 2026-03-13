@@ -40,7 +40,9 @@ async def create_context(
 
 async def list_contexts(db: AsyncSession, user_id: uuid.UUID) -> list[ContextResponse]:
     """List all contexts for a user."""
-    result = await db.execute(select(Context).where(Context.user_id == user_id).order_by(Context.created_at.desc()))
+    result = await db.execute(
+        select(Context).where(Context.user_id == user_id).order_by(Context.created_at.desc())
+    )
     contexts = result.scalars().all()
     return [_context_to_response(c) for c in contexts]
 

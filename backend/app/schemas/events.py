@@ -19,7 +19,9 @@ class EventCreate(BaseModel):
     @classmethod
     def type_must_be_valid(cls, v: str) -> str:
         if v not in VALID_EVENT_TYPES:
-            raise ValueError(f"Invalid event type: {v!r}. Must be one of: {sorted(VALID_EVENT_TYPES)}")
+            raise ValueError(
+                f"Invalid event type: {v!r}. Must be one of: {sorted(VALID_EVENT_TYPES)}"
+            )
         return v
 
 

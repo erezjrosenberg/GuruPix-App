@@ -27,9 +27,7 @@ def upgrade() -> None:
     conn.execute(sa.text("DELETE FROM users WHERE email = 'erez@gurupix.com'"))
 
     # Create admin if not present (idempotent)
-    result = conn.execute(
-        sa.text("SELECT 1 FROM users WHERE email = 'admin@gurupix.com' LIMIT 1")
-    )
+    result = conn.execute(sa.text("SELECT 1 FROM users WHERE email = 'admin@gurupix.com' LIMIT 1"))
     if result.fetchone():
         return
 

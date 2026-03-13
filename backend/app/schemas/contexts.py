@@ -12,7 +12,9 @@ class ContextCreate(BaseModel):
     """Create a context preset."""
 
     label: str = Field(..., min_length=1, max_length=100)
-    attributes: dict[str, Any] | None = Field(None, description="Parsed attributes (e.g. mood, occasion)")
+    attributes: dict[str, Any] | None = Field(
+        None, description="Parsed attributes (e.g. mood, occasion)"
+    )
 
 
 class ContextResponse(BaseModel):

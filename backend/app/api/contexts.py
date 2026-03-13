@@ -47,6 +47,10 @@ async def delete_context_endpoint(
     """Delete a context preset. Returns 404 if not found or not owned."""
     deleted = await delete_context(db, current_user.id, context_id)
     if not deleted:
-        logger.warning("Context delete failed: not found or not owned", extra={"context_id": context_id})
+        logger.warning(
+            "Context delete failed: not found or not owned", extra={"context_id": context_id}
+        )
         raise HTTPException(status_code=404, detail="Context not found")
-    logger.info("Context deleted", extra={"user_id": str(current_user.id), "context_id": context_id})
+    logger.info(
+        "Context deleted", extra={"user_id": str(current_user.id), "context_id": context_id}
+    )
