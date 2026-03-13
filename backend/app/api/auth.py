@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_current_user
 from app.clients import google_oauth
+from app.core.config import Settings
 from app.clients.redis import get_redis_client
 from app.core.security import create_access_token
 from app.db.models import User
@@ -69,7 +70,15 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)) -> Token
 @router.get("/me", response_model=UserResponse)
 async def me(current_user: User = Depends(get_current_user)) -> UserResponse:
     """Return the currently authenticated user's info."""
-    return UserResponse.model_validate(current_user)
+    settings = Settings()
+    admin_emails = settings.get_admin_emails_set()
+    is_admin = current_user.email.lower() in admin_emails
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        created_at=current_user.created_at,
+        is_admin=is_admin,
+    )
 
 
 # -- Google OAuth -------------------------------------------------------------

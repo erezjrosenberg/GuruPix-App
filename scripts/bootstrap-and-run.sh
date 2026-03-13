@@ -67,8 +67,6 @@ fi
 echo "Running database migrations..."
 (cd backend && .venv/bin/python -m alembic upgrade head) || true
 
-(cd backend && PYTHONPATH=. .venv/bin/python scripts/seed_users.py 2>/dev/null) || true
-
 echo ""
 echo "All set. Starting backend + frontend..."
 exec bash "$ROOT/scripts/dev.sh"

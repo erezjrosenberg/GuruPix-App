@@ -22,7 +22,7 @@ if [[ -n "$PIDS" ]]; then
 fi
 
 echo "Running migrations..."
-(cd backend && .venv/bin/python -m alembic upgrade head 2>/dev/null; PYTHONPATH=. .venv/bin/python scripts/seed_users.py 2>/dev/null) || true
+(cd backend && .venv/bin/python -m alembic upgrade head 2>/dev/null) || true
 
 echo "Starting backend..."
 (cd backend && .venv/bin/uvicorn app.main:app --reload --reload-dir app) &

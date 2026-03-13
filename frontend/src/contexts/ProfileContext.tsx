@@ -1,13 +1,12 @@
 import {
   createContext,
   useCallback,
-  useContext,
   useEffect,
   useState,
   type ReactNode,
 } from "react";
 import { api } from "@/api/client";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface Profile {
   user_id: string;
@@ -89,10 +88,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const isAdmin = user?.is_admin ?? false;
   const value: ProfileContextValue = {
     ...state,
     hasProfile: state.profile !== null,
-    needsOnboarding: !state.loading && state.profile === null,
+    needsOnboarding: !state.loading && state.profile === null && !isAdmin,
     fetchProfile,
     patchProfile,
   };
@@ -102,10 +102,4 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useProfile() {
-  const ctx = useContext(ProfileContext);
-  if (!ctx) {
-    throw new Error("useProfile must be used within ProfileProvider");
-  }
-  return ctx;
-}
+export { ProfileContext };

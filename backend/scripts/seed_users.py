@@ -15,10 +15,9 @@ backend_root = Path(__file__).resolve().parent.parent
 if str(backend_root) not in sys.path:
     sys.path.insert(0, str(backend_root))
 
-from sqlalchemy import delete
-
-from app.db.models import User
-from app.db.session import _get_session_factory
+from app.db.models import User  # noqa: E402
+from app.db.session import _get_session_factory  # noqa: E402
+from sqlalchemy import delete  # noqa: E402
 
 
 async def main() -> None:

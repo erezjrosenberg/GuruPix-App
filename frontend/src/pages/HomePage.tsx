@@ -8,6 +8,7 @@ const SAVE_DEBOUNCE_MS = 800;
 export default function HomePage() {
   const { user, loading, logout } = useAuth();
   const { profile, needsOnboarding, patchProfile, loading: profileLoading } = useProfile();
+  const isAdmin = user?.is_admin ?? false;
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -15,12 +16,12 @@ export default function HomePage() {
   const [saved, setSaved] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Redirect new users to onboarding
+  // Redirect new users to onboarding (admin skips onboarding)
   useEffect(() => {
-    if (!loading && !profileLoading && user && needsOnboarding) {
+    if (!loading && !profileLoading && user && needsOnboarding && !isAdmin) {
       navigate("/onboarding", { replace: true });
     }
-  }, [loading, profileLoading, user, needsOnboarding, navigate]);
+  }, [loading, profileLoading, user, needsOnboarding, isAdmin, navigate]);
 
   // Sync form from profile
   useEffect(() => {
@@ -92,8 +93,57 @@ export default function HomePage() {
     );
   }
 
-  if (profileLoading || needsOnboarding) {
+  if (profileLoading || (needsOnboarding && !isAdmin)) {
     return <p style={{ textAlign: "center", marginTop: 80 }}>Loading...</p>;
+  }
+
+  // Admin without profile: simplified entrance (no name/profile form)
+  if (isAdmin && !profile) {
+    return (
+      <div style={{ maxWidth: 600, margin: "40px auto", padding: "0 16px" }}>
+        <header
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 24,
+          }}
+        >
+          <h1 style={{ margin: 0 }}>GuruPix</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 14, color: "#666" }}>{user.email}</span>
+            <button
+              onClick={logout}
+              style={{
+                padding: "6px 14px",
+                background: "none",
+                border: "1px solid #ddd",
+                borderRadius: 4,
+                cursor: "pointer",
+              }}
+            >
+              Log out
+            </button>
+          </div>
+        </header>
+        <p>Welcome, Admin.</p>
+        <Link
+          to="/catalog"
+          style={{
+            display: "inline-block",
+            marginTop: 16,
+            padding: "10px 24px",
+            background: "#2563eb",
+            color: "#fff",
+            borderRadius: 4,
+            textDecoration: "none",
+            fontWeight: 600,
+          }}
+        >
+          Browse catalog →
+        </Link>
+      </div>
+    );
   }
 
   return (

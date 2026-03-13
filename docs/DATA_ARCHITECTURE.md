@@ -7,6 +7,12 @@ This document describes the user login and data persistence flow, database schem
 - **Postgres**: All persistent user data (users, profiles, events, contexts, etc.)
 - **Redis**: OAuth state (short-lived), rate limiting, session touch (sliding TTL). No user data is stored in Redis long-term.
 
+### Persistence in Development
+
+- **Docker volumes** (`postgres_data`, `redis_data`) persist data across restarts. Users, profiles, events, and contexts are saved in Postgres.
+- **Do not run** `docker compose down -v` if you want to keep data — the `-v` flag removes volumes.
+- Admin user is created by migration 003 (`admin@gurupix.com`). No startup script wipes users anymore.
+
 ## Database Schema
 
 ### Tables
@@ -41,26 +47,81 @@ This document describes the user login and data persistence flow, database schem
 
 ## Login → Persistence Flow
 
-1. **User logs in** (email/password or Google OAuth)
-   - Email/password: `POST /api/v1/auth/login` → JWT with `sub` = user_id
-   - Google: `GET /auth/google/start` → `GET /auth/google/callback?code=&state=` → JWT
-   - Signup: `POST /api/v1/auth/signup` → JWT
-   - JWT stored in `localStorage` (`gurupix_token`) on frontend; sent as `Authorization: Bearer <token>`
+### 1. Signup (email/password)
 
-2. **Profile created via onboarding**
-   - `POST /api/v1/profiles/me` with `consent_data_processing: true` (required)
-   - Or `PATCH /api/v1/profiles/me` when creating new profile — also requires `consent_data_processing: true`
-   - Profile stored in Postgres
+| Step | Location | Action |
+|------|----------|--------|
+| 1 | `LoginPage` | User submits email + password (isSignup=true) |
+| 2 | `AuthContext.signup` | `POST /api/v1/auth/signup` |
+| 3 | `auth.py` signup | `create_user(db, email, password)` → `User` + `db.commit()` |
+| 4 | `auth.py` | `_issue_token(user, "signup")` → JWT |
+| 5 | `AuthContext` | `setToken()` → localStorage + `gurupix:token-set` event |
+| 6 | `AuthContext` | `fetchUser()` → `GET /api/v1/auth/me` |
+| 7 | `AuthContext` | `navigate("/")` |
 
-3. **Events recorded**
-   - `POST /api/v1/events` with `item_id`, `type` (like, dislike, watch_complete, skip, click)
-   - Optional: `context_id`, `metadata`
-   - Stored in Postgres; `session_id` and `request_id` from middleware if present
+**Persistence**: `create_user` in `services/auth.py` does `db.add(user)` + `await db.commit()`. User is saved to Postgres immediately.
 
-4. **Contexts**
-   - `POST/GET/DELETE /api/v1/contexts` for context presets
-   - Tables `contexts` and `context_events` exist
-   - Events can reference `context_id` when submitting feedback in a contextual session
+### 2. Login (email/password)
+
+| Step | Location | Action |
+|------|----------|--------|
+| 1 | `LoginPage` | User submits email + password (isSignup=false) |
+| 2 | `AuthContext.login` | `POST /api/v1/auth/login` |
+| 3 | `auth.py` login | `authenticate_user(db, email, password)` → lookup only, no write |
+| 4 | `auth.py` | `_issue_token(user, "email")` → JWT |
+| 5 | `AuthContext` | `setToken()` → localStorage + event |
+| 6 | `AuthContext` | `fetchUser()` → `GET /api/v1/auth/me` |
+| 7 | `AuthContext` | `navigate("/")` |
+
+**Persistence**: No DB write on login; user already exists. Token issued from existing user.
+
+### 3. Google OAuth
+
+| Step | Location | Action |
+|------|----------|--------|
+| 1 | `LoginPage` | User clicks "Continue with Google" |
+| 2 | `AuthContext.startGoogleLogin` | `GET /api/v1/auth/google/start` |
+| 3 | `auth.py` google_start | Generate state, store in Redis, return Google consent URL |
+| 4 | Browser | Redirect to Google; user signs in |
+| 5 | Google | Redirect to `{redirect_uri}?code=...&state=...` (e.g. `/auth/google/callback`) |
+| 6 | `GoogleCallbackPage` | Extract code/state from URL |
+| 7 | `GoogleCallbackPage` | `GET /api/v1/auth/google/callback?code=&state=` |
+| 8 | `auth.py` google_callback | Validate state (Redis), exchange code for tokens, `find_or_create_oauth_user()` |
+| 9 | `find_or_create_oauth_user` | Create `User` + `OAuthAccount` if new; link if email exists; `db.commit()` |
+| 10 | `auth.py` | `_issue_token(user, "google")` → JWT |
+| 11 | `GoogleCallbackPage` | `setToken()` → localStorage + `gurupix:token-set` |
+| 12 | `AuthContext` | Listens for event → `fetchUser()` |
+| 13 | `GoogleCallbackPage` | `navigate("/", { replace: true })` |
+
+**Persistence**: `find_or_create_oauth_user` creates `User` and `OAuthAccount`, or links OAuth to existing user by email. Both paths call `db.commit()`.
+
+### Startup (no user deletion)
+
+| Script | Runs | Effect |
+|--------|------|--------|
+| `alembic upgrade head` | On dev start | Applies pending migrations only; 003 runs once (admin seed) |
+| `seed_users.py` | **Not run** (removed from scripts) | — |
+| `main.py` lifespan | On app start | `init_redis()`, `close_redis()` only |
+
+**No code deletes users on startup.** Migration 003 runs only when first upgrading to that revision; subsequent `alembic upgrade head` is a no-op.
+
+### 4. Profile (onboarding)
+
+- `POST /api/v1/profiles/me` with `consent_data_processing: true` (required)
+- Or `PATCH /api/v1/profiles/me` when creating new profile — also requires `consent_data_processing: true`
+- Profile stored in Postgres
+
+### 5. Events
+
+- `POST /api/v1/events` with `item_id`, `type` (like, dislike, watch_complete, skip, click)
+- Optional: `context_id`, `metadata`
+- Stored in Postgres; `session_id` and `request_id` from middleware if present
+
+### 6. Contexts
+
+- `POST/GET/DELETE /api/v1/contexts` for context presets
+- Tables `contexts` and `context_events` exist
+- Events can reference `context_id` when submitting feedback in a contextual session
 
 ## API Coverage
 
