@@ -17,6 +17,7 @@ function getToken(): string | null {
 
 export function setToken(token: string): void {
   localStorage.setItem("gurupix_token", token);
+  window.dispatchEvent(new CustomEvent("gurupix:token-set"));
 }
 
 export function clearToken(): void {
@@ -71,6 +72,12 @@ export const api = {
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, {
       method: "POST",
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
+  patch: <T>(path: string, body?: unknown) =>
+    request<T>(path, {
+      method: "PATCH",
       body: body ? JSON.stringify(body) : undefined,
     }),
 };

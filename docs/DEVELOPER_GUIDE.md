@@ -68,7 +68,7 @@ Edit `backend/.env` and `frontend/.env.local` if you need to override defaults (
 - `JWT_EXPIRE_MINUTES` — token expiry (e.g. `60`)
 - `GOOGLE_CLIENT_ID` — for Google OAuth
 - `GOOGLE_CLIENT_SECRET` — for Google OAuth
-- `OAUTH_CALLBACK_BASE_URL` — base URL for OAuth callback (e.g. `http://localhost:8000`)
+- `OAUTH_REDIRECT_URI` — where Google redirects after sign-in (e.g. `http://localhost:5173/auth/google/callback` for local dev). See `docs/GOOGLE_OAUTH_SETUP.md` for full setup.
 
 ### 3. Start infrastructure (Postgres, Redis, Qdrant)
 
@@ -204,4 +204,10 @@ For more detail, see `ROADMAP_GuruPix_System_Design.md` and `docs/ARCHITECTURE.m
 - Ensure Stage 4 auth is working: signup, login, and `GET /auth/me` with Bearer token.
 - Run all backend tests to confirm a clean baseline:
   `cd backend && .venv/bin/python -m pytest tests/unit tests/integration -v`
-- Your `backend/.env` should include auth vars (`SECRET_KEY`, `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES`) and, for Google OAuth, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OAUTH_CALLBACK_BASE_URL`.
+- Your `backend/.env` should include auth vars (`SECRET_KEY`, `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES`) and, for Google OAuth, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OAUTH_REDIRECT_URI`. See `docs/GOOGLE_OAUTH_SETUP.md` for creating credentials.
+
+### Before starting Stage 6
+
+- **Admin ingest**: Set `ADMIN_EMAILS` in `backend/.env` (comma-separated emails) to run `POST /ingest/items`. Example: `ADMIN_EMAILS=admin@example.com`
+- **Seed data**: Place `data/seed/items.json`, `item_availability.json`, and `item_reviews_agg.json` in the project root. Run ingest as admin to populate the catalog.
+- **Catalog**: Visit `/catalog` to see items with where-to-watch and review scores.

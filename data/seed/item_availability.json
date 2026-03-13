@@ -1,0 +1,10 @@
+[
+  {"item_index": 0, "provider": "Netflix", "region": "US", "url": "https://netflix.com/title/tt0111161", "availability_type": "stream"},
+  {"item_index": 0, "provider": "HBO Max", "region": "US", "url": "https://hbomax.com/feature/urn:hbo:feature:XXX", "availability_type": "stream"},
+  {"item_index": 1, "provider": "Netflix", "region": "US", "url": "https://netflix.com/title/tt1375666", "availability_type": "stream"},
+  {"item_index": 1, "provider": "Amazon", "region": "US", "url": "https://amazon.com/Inception", "availability_type": "rent"},
+  {"item_index": 2, "provider": "Netflix", "region": "US", "url": "https://netflix.com/title/tt0903747", "availability_type": "stream"},
+  {"item_index": 3, "provider": "HBO Max", "region": "US", "url": "https://hbomax.com/dark-knight", "availability_type": "stream"},
+  {"item_index": 3, "provider": "Amazon", "region": "US", "url": "https://amazon.com/DarkKnight", "availability_type": "rent"},
+  {"item_index": 4, "provider": "Netflix", "region": "US", "url": "https://netflix.com/title/tt4574334", "availability_type": "stream"}
+]

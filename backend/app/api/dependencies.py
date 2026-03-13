@@ -53,3 +53,25 @@ async def get_current_user(
 
     request.state.user_id = str(user.id)
     return user
+
+
+async def get_current_admin_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """
+    Require the current user to be an admin (email in ADMIN_EMAILS).
+
+    Use for admin-only endpoints like POST /ingest/items.
+    """
+    from app.core.config import Settings
+
+    settings = Settings()
+    admin_emails = settings.get_admin_emails_set()
+    if not admin_emails:
+        raise HTTPException(
+            status_code=503,
+            detail="Admin access not configured (ADMIN_EMAILS empty)",
+        )
+    if current_user.email.lower() not in admin_emails:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user

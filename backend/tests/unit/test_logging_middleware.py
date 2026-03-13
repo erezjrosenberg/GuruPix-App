@@ -1,34 +1,45 @@
 """
 Unit test for LoggingMiddleware.
 
-Verifies that each request emits a structured JSON log line containing
-the required fields: event, method, path, status_code, duration_ms, request_id.
+Verifies that each request triggers a structured log with the required fields.
+Uses a mock on the logger to avoid flakiness from test order / logger state.
 """
 
 from __future__ import annotations
 
 import json
-import logging
+from unittest.mock import patch
 
-from app.main import app
-from fastapi.testclient import TestClient
+import pytest
+from app.main import create_app
+from httpx import ASGITransport, AsyncClient
 
-client = TestClient(app)
 
+@pytest.mark.asyncio
+async def test_logging_middleware_emits_structured_log() -> None:
+    """LoggingMiddleware must log each request with event, method, path, status_code, duration_ms, request_id."""
+    log_calls: list[tuple[str, str]] = []
 
-def test_logging_middleware_emits_structured_log(caplog: logging.LogRecord) -> None:
-    with caplog.at_level(logging.INFO, logger="gurupix.request"):
-        client.get("/api/v1/health")
+    def capture_info(msg: str, *args: object, **kwargs: object) -> None:
+        log_calls.append(("info", msg))
 
-    log_lines = [r for r in caplog.records if r.name == "gurupix.request"]
-    assert len(log_lines) >= 1, "Expected at least one log from gurupix.request"
+    with patch("app.middleware.logging.logger") as mock_logger:
+        mock_logger.info.side_effect = capture_info
 
-    payload = json.loads(log_lines[-1].getMessage())
+        app = create_app()
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            response = await ac.get("/api/v1/health")
 
-    assert payload["event"] == "http_request"
-    assert payload["method"] == "GET"
-    assert payload["path"] == "/api/v1/health"
-    assert payload["status_code"] == 200
-    assert isinstance(payload["duration_ms"], (int, float))
-    assert payload["duration_ms"] >= 0
-    assert payload["request_id"] is not None
+    assert response.status_code == 200, "Health endpoint must return 200"
+    assert len(log_calls) >= 1, f"Expected at least one log call; got {len(log_calls)}"
+
+    payload = json.loads(log_calls[-1][1])
+
+    assert payload["event"] == "http_request", "Log must have event=http_request"
+    assert payload["method"] == "GET", "Log must record GET method"
+    assert payload["path"] == "/api/v1/health", "Log must record request path"
+    assert payload["status_code"] == 200, "Log must record status code"
+    assert isinstance(payload["duration_ms"], (int, float)), "Log must have numeric duration_ms"
+    assert payload["duration_ms"] >= 0, "duration_ms must be non-negative"
+    assert payload["request_id"] is not None, "Log must include request_id"

@@ -36,7 +36,8 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     # Maximum requests per IP per route within a 60-second window.
-    rate_limit_per_minute: int = 100
+    # Higher in development to avoid 429s during hot reload and rapid navigation.
+    rate_limit_per_minute: int = 500
 
     # Session TTL in seconds (how long an idle session lives in Redis).
     session_ttl_seconds: int = 86400
@@ -49,7 +50,29 @@ class Settings(BaseSettings):
     # --- Google OAuth (Stage 4) ---
     google_client_id: str = ""
     google_client_secret: str = ""
+    # Where Google redirects after sign-in. Must match exactly what you configure in
+    # Google Cloud Console. For local dev with frontend on 5173, use:
+    #   OAUTH_REDIRECT_URI=http://localhost:5173/auth/google/callback
+    # If unset, falls back to oauth_callback_base_url + /api/v1/auth/google/callback
+    # (user lands on backend and sees JSON; frontend GoogleCallbackPage won't be used).
+    oauth_redirect_uri: str | None = None
     oauth_callback_base_url: str = "http://localhost:8000"
+
+    def get_oauth_redirect_uri(self) -> str:
+        """Return the OAuth redirect URI (must match Google Console config)."""
+        if self.oauth_redirect_uri:
+            return self.oauth_redirect_uri
+        return f"{self.oauth_callback_base_url}/api/v1/auth/google/callback"
+
+    # --- Admin (Stage 5) ---
+    # Comma-separated list of emails allowed to call admin endpoints (e.g. /ingest/items).
+    admin_emails: str = ""
+
+    def get_admin_emails_set(self) -> set[str]:
+        """Return set of admin emails (lowercase, stripped, non-empty)."""
+        if not self.admin_emails:
+            return set()
+        return {e.strip().lower() for e in self.admin_emails.split(",") if e.strip()}
 
     def get_sync_database_url(self) -> str:
         """

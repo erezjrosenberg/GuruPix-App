@@ -27,7 +27,7 @@ def build_authorization_url(state: str) -> str:
     """Return the full Google OAuth consent screen URL."""
     params = {
         "client_id": _settings.google_client_id,
-        "redirect_uri": f"{_settings.oauth_callback_base_url}/api/v1/auth/google/callback",
+        "redirect_uri": _settings.get_oauth_redirect_uri(),
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "offline",
@@ -49,9 +49,7 @@ async def exchange_code_for_tokens(code: str) -> dict[str, Any]:
                 "code": code,
                 "client_id": _settings.google_client_id,
                 "client_secret": _settings.google_client_secret,
-                "redirect_uri": (
-                    f"{_settings.oauth_callback_base_url}/api/v1/auth/google/callback"
-                ),
+                "redirect_uri": _settings.get_oauth_redirect_uri(),
                 "grant_type": "authorization_code",
             },
         )

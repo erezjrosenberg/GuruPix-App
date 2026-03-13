@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProfileProvider } from "@/contexts/ProfileContext";
 import LoginPage from "./LoginPage";
 
 vi.mock("@/api/client", () => ({
@@ -16,7 +18,11 @@ vi.mock("@/api/client", () => ({
 function renderLogin() {
   return render(
     <MemoryRouter initialEntries={["/login"]}>
-      <LoginPage />
+      <AuthProvider>
+        <ProfileProvider>
+          <LoginPage />
+        </ProfileProvider>
+      </AuthProvider>
     </MemoryRouter>
   );
 }

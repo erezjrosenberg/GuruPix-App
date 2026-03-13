@@ -55,9 +55,18 @@ Auth uses **JWT bearer tokens** (not session cookies). Include `Authorization: B
 2. User visits URL, signs in with Google, is redirected to callback with `code` and `state`.
 3. Client calls `GET /auth/google/callback?code=...&state=...` → receives JWT (state validated via Redis).
 
-### Later stages
+### Stage 5 — Catalog + Ingestion + Availability + Review Signals
 
-- **Stage 5**: GET /availability, GET /reviews/aggregate, POST /ingest/items (admin)
+| Method | Path | Description | Auth | Request | Response | Status codes |
+|--------|------|-------------|------|---------|----------|--------------|
+| GET | `/items` | List catalog items (paginated) | No | Query: `limit`, `offset` | `[{ id, type, title, synopsis, genres, ... }]` | 200 |
+| GET | `/availability` | Where to watch an item | No | Query: `item_id`, `region`, `preferred_providers` (optional) | `[{ provider, region, url, availability_type }]` | 200 |
+| GET | `/reviews/aggregate` | Aggregate review scores by source | No | Query: `item_id` | `[{ source, score, scale, normalized_score }]` | 200 |
+| POST | `/ingest/items` | Ingest seed data (items + availability + reviews) | Yes (Admin) | — | `{ ingested, item_ids }` | 201 success, 401/403/404/422 |
+
+**Admin protection**: `POST /ingest/items` requires `Authorization: Bearer <token>` and the user's email must be in `ADMIN_EMAILS` (comma-separated env var). Non-admin returns 403.
+
+### Later stages
 - **Stage 6**: POST /profiles, GET /profiles/me, PATCH /profiles/me, DELETE /profiles/me, POST /profiles/me/export
 - **Stage 7**: POST /contexts/parse, POST /contexts, GET /contexts, DELETE /contexts/{id}, POST /recommendations/contextual
 - **Stage 8**: GET /recommendations, GET /recommendations/{item_id}/explain

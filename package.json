@@ -1,0 +1,9 @@
+{
+  "name": "gurupix",
+  "private": true,
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "dev:full": "bash scripts/bootstrap-and-run.sh"
+  },
+  "devDependencies": {}
+}

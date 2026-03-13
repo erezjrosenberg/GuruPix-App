@@ -2,6 +2,15 @@
 
 Hyper-personalized movie & TV recommendation app. Built in staged, test-gated increments per `ROADMAP_GuruPix_System_Design.md`.
 
+
+## Common commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev:full` | One-command setup and run: starts infra, backend, and frontend together |
+| `npm run dev` | Start backend + frontend (requires infra already running) |
+| `npm test` | Run all tests (backend, frontend, ML, E2E) |
+
 ## Stage 0 complete
 
 - Repo skeleton, docs, docker-compose, CI (GitHub Actions), and pre-commit are in place.

@@ -159,3 +159,19 @@ Release notes and notable changes per stage/PR.
 - Frontend unit: 16 tests (3 test files) — pass.
 - E2E (Playwright): 11 tests (10 auth + 1 placeholder) — pass.
 - Total: 141 tests (all passing).
+
+---
+
+## Stage 5 — Catalog + Ingestion + Availability + Review Signals
+
+**What changed**
+
+- **5.1 Canonical item schema**: Pydantic `ItemCreate`, `ItemResponse`, `ItemType` with validation (title trim, genre normalization, runtime >= 0). Unit + integration tests.
+- **5.2 Seed ingestion**: `POST /api/v1/ingest/items` (admin-only). Reads `data/seed/items.json`, validates, inserts into DB, stores raw payload in metadata, emits `on_item_ingested` per item. Also loads `item_availability.json` and `item_reviews_agg.json`. Admin protection via `ADMIN_EMAILS` env var.
+- **5.3 Availability**: `GET /api/v1/availability?item_id=&region=` returns providers. Optional `preferred_providers` for ranking. `GET /api/v1/items` for catalog listing. Frontend `CatalogPage` at `/catalog` with where-to-watch on cards.
+- **5.4 Review signals**: `GET /api/v1/reviews/aggregate?item_id=` returns aggregate scores by source (RT_CRITICS, RT_AUDIENCE, etc.). Legal-first: scores only, no full review text. Frontend displays "Scores from: RT Critics 91%, RT Audience 98%" on cards.
+
+**Tests run**
+
+- Backend unit + integration: 156 tests — pass.
+- E2E: `tests/e2e/availability.spec.ts` — catalog, where-to-watch, review scores.

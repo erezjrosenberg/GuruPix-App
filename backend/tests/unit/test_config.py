@@ -41,9 +41,9 @@ def test_redis_url_has_sensible_default() -> None:
     assert s.redis_url.startswith("redis://")
 
 
-def test_rate_limit_per_minute_default_is_100() -> None:
+def test_rate_limit_per_minute_default() -> None:
     s = Settings()
-    assert s.rate_limit_per_minute == 100
+    assert s.rate_limit_per_minute == 500  # higher default to avoid 429s in dev
 
 
 def test_session_ttl_seconds_default_is_one_day() -> None:

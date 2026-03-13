@@ -80,6 +80,26 @@ test.describe("Email/password auth flow", () => {
       }),
     );
 
+    // Mock /profiles/me so user stays on home (has completed onboarding)
+    await page.route("**/api/v1/profiles/me", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          user_id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+          display_name: null,
+          bio: null,
+          region: "US",
+          languages: null,
+          providers: null,
+          preferences: {},
+          consent: { data_processing: true },
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+        }),
+      }),
+    );
+
     // Toggle to signup mode
     await page.getByRole("button", { name: /sign up/i }).click();
 
@@ -183,6 +203,26 @@ test.describe("Google OAuth flow (mocked)", () => {
       }),
     );
 
+    // Mock /profiles/me so user stays on home
+    await page.route("**/api/v1/profiles/me", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          user_id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+          display_name: null,
+          bio: null,
+          region: "US",
+          languages: null,
+          providers: null,
+          preferences: {},
+          consent: { data_processing: true },
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+        }),
+      }),
+    );
+
     // Simulate Google redirecting back to our callback page with code + state
     await page.goto("/auth/google/callback?code=auth-code&state=valid-state");
 
@@ -215,5 +255,77 @@ test.describe("Google OAuth flow (mocked)", () => {
     await expect(page.getByRole("alert")).toContainText(
       /missing authorization code or state/i,
     );
+  });
+});
+
+// -- Onboarding flow (new user) -----------------------------------------------
+
+test.describe("Onboarding flow", () => {
+  test("new user without profile is redirected to onboarding", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/auth/me", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "new-user-id",
+          email: "new@example.com",
+          created_at: "2026-01-01T00:00:00Z",
+        }),
+      }),
+    );
+
+    // No profile = new user, triggers onboarding redirect
+    await page.route("**/api/v1/profiles/me", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "null",
+      }),
+    );
+
+    // Set token so useAuth considers user logged in
+    await page.goto("/login");
+    await page.evaluate(() =>
+      localStorage.setItem("gurupix_token", "fake-token-for-onboarding-test"),
+    );
+    await page.goto("/");
+
+    await expect(page).toHaveURL(/\/onboarding/);
+    await expect(page.getByText(/welcome to gurupix/i)).toBeVisible();
+    await expect(page.getByText(/tell us a bit about yourself/i)).toBeVisible();
+  });
+
+  test("onboarding requires consent to continue", async ({ page }) => {
+    await page.route("**/api/v1/auth/me", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "new-user-2",
+          email: "new2@example.com",
+          created_at: "2026-01-01T00:00:00Z",
+        }),
+      }),
+    );
+    await page.route("**/api/v1/profiles/me", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "null",
+      }),
+    );
+
+    await page.goto("/login");
+    await page.evaluate(() =>
+      localStorage.setItem("gurupix_token", "fake-token-2"),
+    );
+    await page.goto("/");
+
+    await expect(page).toHaveURL(/\/onboarding/);
+    // Continue button should be disabled without consent
+    const continueBtn = page.getByRole("button", { name: /continue/i });
+    await expect(continueBtn).toBeDisabled();
   });
 });

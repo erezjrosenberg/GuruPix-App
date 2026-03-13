@@ -1,0 +1,45 @@
+[
+  {
+    "type": "movie",
+    "title": "The Shawshank Redemption",
+    "synopsis": "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
+    "genres": ["Drama"],
+    "runtime": 142,
+    "release_date": "1994-09-23",
+    "language": "en"
+  },
+  {
+    "type": "movie",
+    "title": "Inception",
+    "synopsis": "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.",
+    "genres": ["Sci-Fi", "Action", "Thriller"],
+    "runtime": 148,
+    "release_date": "2010-07-16",
+    "language": "en"
+  },
+  {
+    "type": "series",
+    "title": "Breaking Bad",
+    "synopsis": "A high school chemistry teacher diagnosed with cancer turns to cooking meth to secure his family's future.",
+    "genres": ["Crime", "Drama", "Thriller"],
+    "release_date": "2008-01-20",
+    "language": "en"
+  },
+  {
+    "type": "movie",
+    "title": "The Dark Knight",
+    "synopsis": "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests.",
+    "genres": ["Action", "Crime", "Drama"],
+    "runtime": 152,
+    "release_date": "2008-07-18",
+    "language": "en"
+  },
+  {
+    "type": "series",
+    "title": "Stranger Things",
+    "synopsis": "When a young boy vanishes, a small town uncovers a mystery involving secret experiments and supernatural forces.",
+    "genres": ["Sci-Fi", "Horror", "Drama"],
+    "release_date": "2016-07-15",
+    "language": "en"
+  }
+]
